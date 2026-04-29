@@ -41,6 +41,7 @@ export const crearManejadorEnvioLogin = (
         alert('¡Bienvenido!');
         alCerrar();
       }, 500);
+    // eslint-disable-next-line no-unused-vars
     } catch (error) {
       establecerErrores({ submit: 'Error al iniciar sesión. Intenta nuevamente.' });
     } finally {
@@ -69,14 +70,14 @@ export const crearManejadorEnvioRegistro = (
     establecerCargando(true);
 
     try {
-      const datosEnvio = {
-        rut: datosFormulario.rut,
-        nombre: datosFormulario.nombre,
-        apellido: datosFormulario.apellido,
-        email: datosFormulario.email,
-        telefono: parseInt(datosFormulario.telefono),
-        password: datosFormulario.password,
-      };
+        const datosEnvio = {
+          rut: datosFormulario.rut,
+          nombre: datosFormulario.nombre,
+          apellido: datosFormulario.apellido,
+          email: datosFormulario.email,
+          telefono: datosFormulario.telefono ? Number(datosFormulario.telefono) : undefined,
+          password: datosFormulario.password,
+        };
 
       console.log('Datos de registro:', datosEnvio);
 
@@ -84,6 +85,7 @@ export const crearManejadorEnvioRegistro = (
         alert('¡Registro exitoso! Bienvenido a Sanos y Salvos');
         alCerrar();
       }, 500);
+    // eslint-disable-next-line no-unused-vars
     } catch (error) {
       establecerErrores({ submit: 'Error al registrarse. Intenta nuevamente.' });
     } finally {

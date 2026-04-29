@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import Home from './Home';
-import Login from './usuarios/Login';
-import Registro from './usuarios/Registro';
+import Home from './components/Home';
+import Login from './components/Login';
+import Registro from './components/Registro';
 import './App.css';
 
 function App() {
