@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { validarFormularioRegistro } from '../js/validaciones';
 import { crearManejadorCambio, crearManejadorEnvioRegistro } from '../js/manejadoresFormulario';
-import './css/Registro.css';
+import '../css/Registro.css';
 
 export default function Registro({ onClose, onSwitchToLogin }) {
   const [datosFormulario, establecerDatosFormulario] = useState({
@@ -47,8 +47,34 @@ export default function Registro({ onClose, onSwitchToLogin }) {
                 id="rut"
                 name="rut"
                 value={datosFormulario.rut}
-                onChange={manejadorCambio}
-                placeholder="12.345.678-9"
+                onChange={e => {
+                  let raw = e.target.value.replace(/[^\dkK]/g, "");
+                  let v = raw;
+                  if (raw.length > 1) {
+                    if (raw.length <= 8) {
+                      // 2.171.447-7
+                      v = raw.replace(/(\d{1})(\d{3})?(\d{0,3})?([\dkK])?$/, (m, g1, g2, g3, g4) => {
+                        let out = g1;
+                        if (g2) out += '.' + g2;
+                        if (g3) out += '.' + g3;
+                        if (g4) out += '-' + g4;
+                        return out;
+                      });
+                    } else {
+                      // 21.714.477-9
+                      v = raw.replace(/(\d{2})(\d{3})?(\d{0,3})?([\dkK])?$/, (m, g1, g2, g3, g4) => {
+                        let out = g1;
+                        if (g2) out += '.' + g2;
+                        if (g3) out += '.' + g3;
+                        if (g4) out += '-' + g4;
+                        return out;
+                      });
+                    }
+                  }
+                  establecerDatosFormulario(anterior => ({ ...anterior, rut: v }));
+                  if (establecerErrores) establecerErrores(anterior => ({ ...anterior, rut: '' }));
+                }}
+                placeholder="21.714.477-9"
                 className={errores.rut ? 'input-error' : ''}
               />
               {errores.rut && (
@@ -109,15 +135,34 @@ export default function Registro({ onClose, onSwitchToLogin }) {
 
           <div className="form-group">
             <label htmlFor="telefono">Teléfono</label>
-            <input
-              type="tel"
-              id="telefono"
-              name="telefono"
-              value={datosFormulario.telefono}
-              onChange={manejadorCambio}
-              placeholder="+56 9 1234 5678"
-              className={errores.telefono ? 'input-error' : ''}
-            />
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ marginRight: 4, color: '#888' }}>+56</span>
+              <input
+                type="tel"
+                id="telefono"
+                name="telefono"
+                value={(() => {
+                  // Formatea el valor para mostrarlo con espacios
+                  let raw = datosFormulario.telefono.replace(/[^\d]/g, '');
+                  if (!raw) return '';
+                  let out = raw[0] || '';
+                  if (raw.length > 1) out += ' ' + raw.slice(1, 5);
+                  if (raw.length > 5) out += ' ' + raw.slice(5, 9);
+                  if (raw.length > 9) out += ' ' + raw.slice(9, 13);
+                  return out;
+                })()}
+                onChange={e => {
+                  // Solo números, sin espacios ni +56
+                  let value = e.target.value.replace(/[^\d]/g, '');
+                  establecerDatosFormulario(anterior => ({ ...anterior, telefono: value }));
+                  if (establecerErrores) establecerErrores(anterior => ({ ...anterior, telefono: '' }));
+                }}
+                placeholder="9 1234 5678"
+                className={errores.telefono ? 'input-error' : ''}
+                style={{ flex: 1 }}
+                maxLength={12}
+              />
+            </div>
             {errores.telefono && (
               <span className="error-message">{errores.telefono}</span>
             )}

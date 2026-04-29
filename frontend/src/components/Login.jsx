@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { validarFormularioLogin } from '../js/validaciones';
 import { crearManejadorCambio, crearManejadorEnvioLogin } from '../js/manejadoresFormulario';
-import './css/Login.css';
+import '../css/Login.css';
 
 export default function Login({ onClose, onSwitchToRegister }) {
   const [datosFormulario, establecerDatosFormulario] = useState({

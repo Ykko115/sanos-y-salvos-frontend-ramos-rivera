@@ -1,5 +1,6 @@
 export const validarCorreo = (correo) => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+  // Solo acepta @gmail.com o @duocuc.cl
+  return /^[^\s@]+@(gmail\.com|duocuc\.cl)$/.test(correo);
 };
 
 export const validarRUT = (rut) => {
@@ -12,7 +13,8 @@ export const validarTelefono = (telefono) => {
 };
 
 export const validarContraseñaFuerte = (contraseña) => {
-  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$!*\-_]).{8,}$/.test(contraseña);
+  // Debe tener minúscula, mayúscula, número y cualquier símbolo especial
+  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/.test(contraseña);
 };
 
 export const validarFormularioLogin = (datosFormulario) => {
