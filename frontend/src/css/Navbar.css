@@ -1,3 +1,15 @@
+/* Estilo para el nombre/email del usuario y el rol en el navbar */
+.user-name, .user-role {
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-right: 0.5rem;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  transition: color 0.3s;
+  display: flex;
+  align-items: center;
+}
 .navbar {
   background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
   padding: 1rem 0;
@@ -126,9 +138,29 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+
+
 .btn-logout {
-  background-color: #e74c3c;
+  background: none !important;
   color: white;
+  border: none;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-right: 0.5rem;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  transition: color 0.3s;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  box-shadow: none !important;
+}
+
+.btn-logout:hover {
+  color: #f0f0f0;
+  text-decoration: underline;
+  background: none !important;
+  box-shadow: none !important;
 }
 
 .btn-logout:hover {

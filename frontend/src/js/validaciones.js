@@ -1,6 +1,6 @@
 export const validarCorreo = (correo) => {
   // Solo acepta @gmail.com o @duocuc.cl
-  return /^[^\s@]+@(gmail\.com|duocuc\.cl)$/.test(correo);
+  return /^[^\s@]+@(gmail\.com|duocuc\.cl|sanosysalvos\.com)$/.test(correo);
 };
 
 export const validarRUT = (rut) => {
