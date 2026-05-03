@@ -53,10 +53,9 @@ export const crearManejadorEnvioLogin = (
       }
 
       // Si el backend retorna el usuario autenticado
-      // eslint-disable-next-line no-unused-vars
       const usuario = await respuesta.json();
-      // Puedes guardar el usuario en localStorage/sessionStorage si lo necesitas
-      // localStorage.setItem('usuario', JSON.stringify(usuario));
+      // Guardar usuario en localStorage para que Navbar lo detecte
+      localStorage.setItem('usuario', JSON.stringify(usuario));
 
       alert('¡Bienvenido!');
       alCerrar();
@@ -110,6 +109,10 @@ export const crearManejadorEnvioRegistro = (
         const errorData = await respuesta.json().catch(() => ({}));
         throw new Error(errorData.message || 'Error al registrarse. Intenta nuevamente.');
       }
+
+      // Guardar usuario en localStorage si el backend retorna el usuario y/o token
+      const usuarioRegistrado = await respuesta.json();
+      localStorage.setItem('usuario', JSON.stringify(usuarioRegistrado));
 
       alert('¡Registro exitoso! Bienvenido a Sanos y Salvos');
       alCerrar();
