@@ -1,0 +1,263 @@
+/* Estilo para el nombre/email del usuario y el rol en el navbar */
+.user-name, .user-role {
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-right: 0.5rem;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  transition: color 0.3s;
+  display: flex;
+  align-items: center;
+}
+.navbar {
+  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  padding: 1rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: none;
+  margin-right: auto;
+}
+
+.logo-icon {
+  font-size: 1.8rem;
+}
+
+.navbar-logo h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+.nav-menu {
+  display: flex;
+  list-style: none;
+}
+
+.nav-list {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 3rem;
+  align-items: center;
+  margin-left: 3rem;
+}
+
+.nav-item {
+  position: relative;
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: white;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.nav-link:hover {
+  color: #f0f0f0;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.btn-login,
+.btn-register,
+.btn-logout {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.btn-login {
+  background-color: transparent;
+  color: white;
+  border: 2px solid white;
+}
+
+.btn-login:hover {
+  background-color: white;
+  color: #27ae60;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-register {
+  background-color: white;
+  color: #27ae60;
+}
+
+.btn-register:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+
+
+.btn-logout {
+  background: none !important;
+  color: white;
+  border: none;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-right: 0.5rem;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  transition: color 0.3s;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  box-shadow: none !important;
+}
+
+.btn-logout:hover {
+  color: #f0f0f0;
+  text-decoration: underline;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+.btn-logout:hover {
+  background-color: #c0392b;
+  transform: translateY(-2px);
+}
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+  gap: 0.5rem;
+}
+
+.bar {
+  width: 25px;
+  height: 3px;
+  background-color: white;
+  transition: all 0.3s ease;
+  border-radius: 2px;
+}
+
+@media (max-width: 768px) {
+  .nav-list {
+    position: absolute;
+    top: 70px;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    flex-direction: column;
+    gap: 0;
+    padding: 2rem 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+
+  .nav-menu.active .nav-list {
+    max-height: 500px;
+  }
+
+  .nav-item {
+    width: 100%;
+    text-align: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .nav-link::after {
+    display: none;
+  }
+
+  .auth-buttons {
+    flex-direction: column;
+    width: 100%;
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+
+  .btn-login,
+  .btn-register,
+  .btn-logout {
+    width: 100%;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+
+  .bar.active:nth-child(1) {
+    transform: rotate(45deg) translate(10px, 10px);
+  }
+
+  .bar.active:nth-child(2) {
+    opacity: 0;
+  }
+
+  .bar.active:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
+  }
+
+  .navbar-logo h1 {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-container {
+    padding: 0 0.5rem;
+  }
+
+  .navbar-logo h1 {
+    font-size: 1rem;
+    letter-spacing: 0;
+  }
+
+  .logo-icon {
+    font-size: 1.5rem;
+  }
+}
