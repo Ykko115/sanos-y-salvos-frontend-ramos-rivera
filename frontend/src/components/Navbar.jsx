@@ -1,8 +1,11 @@
+
 import React, { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import '../css/Navbar.css';
 
 
-export default function Navbar({ onLogin, onRegister }) {
+export default function Navbar() {
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState(null); // user: { nombre, rol }
 
@@ -42,14 +45,15 @@ export default function Navbar({ onLogin, onRegister }) {
     setMenuOpen(!menuOpen);
   };
 
+
+  const navigate = useNavigate();
   const handleLogin = () => {
     setMenuOpen(false);
-    onLogin();
+    navigate('/login', { state: { backgroundLocation: location } });
   };
-
   const handleRegister = () => {
     setMenuOpen(false);
-    onRegister();
+    navigate('/registro', { state: { backgroundLocation: location } });
   };
 
   const handleLogout = () => {
@@ -106,15 +110,15 @@ export default function Navbar({ onLogin, onRegister }) {
       <div className="navbar-container">
         <div className="navbar-logo">
           <span className="logo-icon">🐾</span>
-          <h1>SANOS Y SALVOS</h1>
+          <h1><Link to="/">SANOS Y SALVOS</Link></h1>
         </div>
 
         <div className={`nav-menu ${menuOpen ? 'active' : ''}`}>
           <ul className="nav-list">
             <li className="nav-item">
-              <a href="#inicio" className="nav-link">
+              <Link to="/" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Inicio
-              </a>
+              </Link>
             </li>
             <li className="nav-item">
               <a href="#buscar" className="nav-link">
@@ -132,7 +136,16 @@ export default function Navbar({ onLogin, onRegister }) {
               </a>
             </li>
             <li className="nav-item auth-buttons">
-              {authSection}
+              {!user ? (
+                <>
+                  <button className="btn-login" onClick={handleLogin}>
+                    Iniciar Sesión
+                  </button>
+                  <button className="btn-register" onClick={handleRegister}>
+                    Registrarse
+                  </button>
+                </>
+              ) : authSection}
             </li>
           </ul>
         </div>

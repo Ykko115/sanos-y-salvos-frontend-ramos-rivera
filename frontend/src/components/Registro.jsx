@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { validarFormularioRegistro } from '../js/validaciones';
 import { crearManejadorCambio, crearManejadorEnvioRegistro } from '../js/manejadoresFormulario';
 import '../css/Registro.css';
 
-export default function Registro({ onClose, onSwitchToLogin }) {
+export default function Registro() {
+  const navigate = useNavigate();
   const [datosFormulario, establecerDatosFormulario] = useState({
     rut: '',
     nombre: '',
@@ -23,13 +25,13 @@ export default function Registro({ onClose, onSwitchToLogin }) {
     establecerErrores,
     establecerCargando,
     validarFormularioRegistro,
-    onClose
+    () => navigate('/')
   );
 
   return (
     <div className="registro-overlay">
       <div className="registro-container">
-        <button className="close-btn" onClick={onClose}>
+        <button className="close-btn" onClick={() => navigate('/') }>
           ✕
         </button>
 
@@ -220,7 +222,7 @@ export default function Registro({ onClose, onSwitchToLogin }) {
             ¿Ya tienes cuenta?{' '}
             <button
               className="switch-button"
-              onClick={onSwitchToLogin}
+              onClick={() => navigate('/login')}
             >
               Inicia sesión aquí
             </button>
