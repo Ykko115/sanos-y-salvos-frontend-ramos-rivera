@@ -1,6 +1,9 @@
-import '../css/Home.css';
 
-export default function Home({ onLoginClick, onRegisterClick }) {
+import '../css/Home.css';
+import { Link, useLocation } from 'react-router-dom';
+
+export default function Home() {
+  const location = useLocation();
   return (
     <main className="home">
       <section className="hero-section">
@@ -18,12 +21,20 @@ export default function Home({ onLoginClick, onRegisterClick }) {
             </p>
 
             <div className="hero-buttons">
-              <button className="btn btn-primary" onClick={onLoginClick}>
+              <Link
+                to="/login"
+                state={{ backgroundLocation: location }}
+                className="btn btn-primary"
+              >
                 🔐 Iniciar Sesión
-              </button>
-              <button className="btn btn-secondary" onClick={onRegisterClick}>
+              </Link>
+              <Link
+                to="/registro"
+                state={{ backgroundLocation: location }}
+                className="btn btn-secondary"
+              >
                 ➕ Crear Cuenta
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -79,11 +90,16 @@ export default function Home({ onLoginClick, onRegisterClick }) {
             No esperes más. Crea una cuenta y reporta tu mascota ahora mismo.
             Cada minuto cuenta.
           </p>
-          <button className="btn btn-primary-large" onClick={onRegisterClick}>
+          <Link
+            to="/registro"
+            state={{ backgroundLocation: location }}
+            className="btn btn-primary-large"
+          >
             Comenzar Ahora
-          </button>
+          </Link>
         </div>
       </section>
     </main>
   );
 }
+

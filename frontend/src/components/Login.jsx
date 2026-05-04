@@ -1,9 +1,13 @@
-import { useState } from 'react';
+
+import { useNavigate } from 'react-router-dom';
 import { validarFormularioLogin } from '../js/validaciones';
 import { crearManejadorCambio, crearManejadorEnvioLogin } from '../js/manejadoresFormulario';
-import '../css/Login.css';
+import { useState } from 'react';
+import '../css/Registro.css';
 
-export default function Login({ onClose, onSwitchToRegister }) {
+
+export default function Login() {
+  const navigate = useNavigate();
   const [datosFormulario, establecerDatosFormulario] = useState({
     email: '',
     password: '',
@@ -18,22 +22,22 @@ export default function Login({ onClose, onSwitchToRegister }) {
     establecerErrores,
     establecerCargando,
     validarFormularioLogin,
-    onClose
+    () => navigate('/')
   );
 
   return (
-    <div className="login-overlay">
-      <div className="login-container">
-        <button className="close-btn" onClick={onClose}>
+    <div className="registro-overlay">
+      <div className="registro-container">
+        <button className="close-btn" onClick={() => navigate('/') }>
           ✕
         </button>
 
-        <div className="login-header">
+        <div className="registro-header">
           <h2>🐾 Iniciar Sesión</h2>
           <p>Accede a tu cuenta de Sanos y Salvos</p>
         </div>
 
-        <form onSubmit={manejadorEnvio} className="login-form">
+        <form onSubmit={manejadorEnvio} className="registro-form">
           <div className="form-group">
             <label htmlFor="email">Correo Electrónico</label>
             <input
@@ -83,12 +87,12 @@ export default function Login({ onClose, onSwitchToRegister }) {
           </button>
         </form>
 
-        <div className="login-footer">
+        <div className="registro-footer">
           <p>
             ¿No tienes cuenta?{' '}
             <button
               className="switch-button"
-              onClick={onSwitchToRegister}
+              onClick={() => navigate('/registro')}
             >
               Regístrate aquí
             </button>

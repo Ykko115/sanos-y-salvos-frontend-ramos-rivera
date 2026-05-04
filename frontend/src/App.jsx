@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './components/Home';
@@ -6,47 +7,38 @@ import Login from './components/Login';
 import Registro from './components/Registro';
 import './App.css';
 
-function App() {
-  const [currentView, setCurrentView] = useState('home');
 
-  const handleLoginClick = () => {
-    setCurrentView('login');
-  };
 
-  const handleRegisterClick = () => {
-    setCurrentView('registro');
-  };
-
-  const handleCloseModal = () => {
-    setCurrentView('home');
-  };
-
-  const handleSwitchToLogin = () => {
-    setCurrentView('login');
-  };
-
-  const handleSwitchToRegister = () => {
-    setCurrentView('registro');
-  };
+function ModalRoutes() {
+  const location = useLocation();
+  // Detecta si la navegación es modal
+  const state = location.state;
+  const backgroundLocation = state && state.backgroundLocation;
 
   return (
     <>
-      <Navbar onLogin={handleLoginClick} onRegister={handleRegisterClick} />
+      <Navbar />
+      <Routes location={backgroundLocation || location}>
+        <Route path="/" element={<Home />} />
+      </Routes>
 
-      {currentView === 'home' && (
-        <Home onLoginClick={handleLoginClick} onRegisterClick={handleRegisterClick} />
+      {/* Modales sobre Home */}
+      {backgroundLocation && (
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/registro" element={<Registro />} />
+        </Routes>
       )}
-
-      {currentView === 'login' && (
-        <Login onClose={handleCloseModal} onSwitchToRegister={handleSwitchToRegister} />
-      )}
-
-      {currentView === 'registro' && (
-        <Registro onClose={handleCloseModal} onSwitchToLogin={handleSwitchToLogin} />
-      )}
-
       <Footer />
     </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <ModalRoutes />
+    </Router>
   );
 }
 
