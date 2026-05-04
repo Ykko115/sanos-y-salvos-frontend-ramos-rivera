@@ -6,35 +6,20 @@ export default function Home() {
   const location = useLocation();
   return (
     <main className="home">
-      <section className="hero-section">
-        <div className="hero-content">
-          <div className="hero-text">
-            <h2 className="hero-title">
-              🐾 Bienvenido a <span className="highlight">Sanos y Salvos</span>
-            </h2>
-            <p className="hero-subtitle">
-              Tu plataforma para buscar y reportar mascotas perdidas
-            </p>
-            <p className="hero-description">
-              Ayudamos a reunir a las mascotas perdidas con sus familias.
-              Únete a nuestra comunidad y sé parte del cambio.
-            </p>
-
-            <div className="hero-buttons">
-              <Link
-                to="/login"
-                state={{ backgroundLocation: location }}
-                className="btn btn-primary"
-              >
-                🔐 Iniciar Sesión
-              </Link>
-              <Link
-                to="/registro"
-                state={{ backgroundLocation: location }}
-                className="btn btn-secondary"
-              >
-                ➕ Crear Cuenta
-              </Link>
+      <section className="hero-section bg-light py-5">
+        <div className="container">
+          <div className="row align-items-center justify-content-center">
+            <div className="col-12 col-md-10 col-lg-8 text-center">
+              <h2 className="hero-title display-5 fw-bold mb-3">
+                🐾 Bienvenido a <span className="highlight">Sanos y Salvos</span>
+              </h2>
+              <p className="hero-subtitle lead mb-2">
+                Tu plataforma para buscar y reportar mascotas perdidas
+              </p>
+              <p className="hero-description mb-4">
+                Ayudamos a reunir a las mascotas perdidas con sus familias.<br className="d-none d-md-block" />
+                Únete a nuestra comunidad y sé parte del cambio.
+              </p>
             </div>
           </div>
         </div>
