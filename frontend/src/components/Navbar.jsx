@@ -108,9 +108,13 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <div className="navbar-logo d-flex align-items-center">
+        <div className="navbar-logo d-flex align-items-center" style={{marginRight: '2rem'}}>
           <span className="logo-icon">🐾</span>
-          <h1 className="m-0 ms-2">SANOS Y SALVOS</h1>
+          <h1 className="m-0 ms-2" >
+            <Link to="/" className="nav-link" onClick={() => setMenuOpen(false)}>
+            SANOS Y SALVOS
+            </Link>
+            </h1>
         </div>
 
         <div
