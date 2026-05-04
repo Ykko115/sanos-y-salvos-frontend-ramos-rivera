@@ -108,30 +108,40 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <div className="navbar-logo">
+        <div className="navbar-logo d-flex align-items-center" style={{marginRight: '2rem'}}>
           <span className="logo-icon">🐾</span>
-          <h1><Link to="/">SANOS Y SALVOS</Link></h1>
+          <h1 className="m-0 ms-2" >
+            <Link to="/" className="nav-link" onClick={() => setMenuOpen(false)}>
+            SANOS Y SALVOS
+            </Link>
+            </h1>
         </div>
 
-        <div className={`nav-menu ${menuOpen ? 'active' : ''}`}>
-          <ul className="nav-list">
-            <li className="nav-item">
+        <div
+          className={
+            `nav-menu${menuOpen ? ' active' : ''} ` +
+            (menuOpen ? 'd-block ' : 'd-none ') +
+            'd-md-block'
+          }
+        >
+          <ul className="nav-list list-unstyled m-0">
+            <li className="nav-item d-block d-md-none">
               <Link to="/" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Inicio
               </Link>
             </li>
             <li className="nav-item">
-              <a href="#buscar" className="nav-link">
+              <a href="#buscar" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Buscar Mascotas
               </a>
             </li>
             <li className="nav-item">
-              <a href="#reportar" className="nav-link">
+              <a href="#reportar" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Reportar Mascota
               </a>
             </li>
             <li className="nav-item">
-              <a href="#contacto" className="nav-link">
+              <a href="#contacto" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Contacto
               </a>
             </li>
