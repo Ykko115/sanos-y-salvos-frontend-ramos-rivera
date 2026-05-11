@@ -18,7 +18,15 @@ export default function Navbar() {
       const usuarioGuardado = localStorage.getItem('usuario');
       if (usuarioGuardado) {
         try {
-          setUser(JSON.parse(usuarioGuardado));
+          const usuario = JSON.parse(usuarioGuardado);
+          // Verificar expiración del token
+          if (usuario.exp && Date.now() / 1000 > usuario.exp) {
+            // Token expirado: eliminar usuario y cerrar sesión
+            localStorage.removeItem('usuario');
+            setUser(null);
+          } else {
+            setUser(usuario);
+          }
         } catch {
           setUser(null);
         }
@@ -32,7 +40,7 @@ export default function Navbar() {
     // Escuchar cambios en localStorage (de otras pestañas)
     window.addEventListener('storage', cargarUsuario);
 
-    // También usar un timer para detectar cambios locales
+    // También usar un timer para detectar cambios locales y expiración
     const interval = setInterval(cargarUsuario, 1000);
 
     return () => {
