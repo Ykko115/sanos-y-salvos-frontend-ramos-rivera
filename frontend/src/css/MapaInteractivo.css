@@ -1,0 +1,263 @@
+.mapa-container {
+  margin: 40px 0;
+  padding: 30px 20px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mapa-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.mapa-header h2 {
+  color: #333;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.mapa-header p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.mapa-leaflet {
+  width: 100%;
+  height: 60vh;
+  min-height: 350px;
+  max-height: 70vh;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  z-index: 10;
+}
+
+/* Ajuste para evitar superposición con el navbar */
+.mapa-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Icono especial para la ubicación del usuario */
+.user-marker {
+  border: 3px solid #27ae60;
+  background: #e8f5e9;
+}
+
+/* Estilos para los marcadores personalizados */
+.custom-marker {
+  font-size: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: white;
+  border-radius: 50%;
+  border: 3px solid #ff6b6b;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  animation: bounce 0.6s;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Estilos para el popup */
+.custom-popup .leaflet-popup-content-wrapper {
+  background-color: white;
+  border-radius: 10px;
+  padding: 0 !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.custom-popup .leaflet-popup-tip {
+  background-color: white;
+}
+
+.popup-content {
+  padding: 15px;
+  max-width: 90vw;
+  min-width: 220px;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.popup-foto {
+  width: 100%;
+  max-width: 350px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.popup-info h3 {
+  margin: 10px 0 5px 0;
+  color: #ff6b6b;
+  font-size: 1.4rem;
+}
+
+.especie-raza {
+  color: #666;
+  font-size: 0.95rem;
+  margin: 5px 0;
+  font-weight: 500;
+}
+
+.color {
+  font-size: 0.9rem;
+  margin: 5px 0;
+}
+
+.descripcion {
+  font-size: 0.9rem;
+  margin: 8px 0;
+  line-height: 1.4;
+  color: #555;
+  background-color: #f5f5f5;
+  padding: 8px;
+  border-radius: 5px;
+}
+
+.fecha {
+  font-size: 0.85rem;
+  margin: 5px 0;
+  color: #888;
+}
+
+.ubicacion {
+  font-size: 0.9rem;
+  margin: 8px 0;
+  color: #0066cc;
+}
+
+.contacto {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+  font-size: 0.85rem;
+}
+
+.contacto p {
+  margin: 4px 0;
+}
+
+.contacto strong {
+  color: #333;
+}
+
+.btn-reportar {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.btn-reportar:hover {
+  background-color: #ff5252;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.mapa-info {
+  text-align: center;
+  margin-top: 20px;
+  padding: 15px;
+  background-color: white;
+  border-radius: 8px;
+  border-left: 4px solid #ff6b6b;
+}
+
+.mapa-info p {
+  margin: 0;
+  color: #333;
+  font-size: 1rem;
+}
+
+.mapa-info strong {
+  color: #ff6b6b;
+  font-size: 1.2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mapa-container {
+    padding: 20px 15px;
+    margin: 30px 0;
+  }
+
+  .mapa-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .mapa-leaflet {
+    height: 400px;
+  }
+
+  .popup-content {
+    max-width: 280px;
+  }
+
+  .popup-foto {
+    height: 150px;
+  }
+
+  .popup-info h3 {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .mapa-container {
+    padding: 15px 10px;
+    margin: 20px 0;
+  }
+
+  .mapa-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .mapa-leaflet {
+    height: 300px;
+  }
+
+  .popup-content {
+    max-width: 250px;
+    padding: 12px;
+  }
+
+  .popup-foto {
+    height: 120px;
+  }
+
+  .popup-info h3 {
+    font-size: 1.1rem;
+  }
+
+  .mapa-info p {
+    font-size: 0.9rem;
+  }
+}

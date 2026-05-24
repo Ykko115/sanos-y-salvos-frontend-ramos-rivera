@@ -327,3 +327,15 @@
     font-size: 0.9rem;
   }
 }
+
+/* Sección del mapa */
+.mapa-section {
+  padding: 3rem 1rem;
+  background-color: #ffffff;
+  border-top: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.mapa-section .container {
+  max-width: 1200px;
+}
