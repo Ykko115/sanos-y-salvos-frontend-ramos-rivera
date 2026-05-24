@@ -1,0 +1,136 @@
+.modal-reporte-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-reporte {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 600px;
+  width: 95vw;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  position: relative;
+  padding: 0 0 1.5rem 0;
+  animation: modalPop 0.2s;
+}
+
+@keyframes modalPop {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modal-reporte-close {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #ff6b6b;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.modal-reporte-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1.5rem 0 1.5rem;
+}
+
+.modal-reporte-foto {
+  width: 100%;
+  max-width: 350px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.modal-reporte-info h2 {
+  color: #ff6b6b;
+  font-size: 2rem;
+  margin: 0 0 0.5rem 0;
+  text-align: center;
+}
+
+.especie-raza {
+  color: #666;
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem 0;
+  text-align: center;
+}
+
+.color, .fecha, .ubicacion {
+  font-size: 1rem;
+  margin: 0.3rem 0;
+}
+
+.descripcion {
+  font-size: 1rem;
+  margin: 0.5rem 0;
+  line-height: 1.4;
+  color: #555;
+  background-color: #f5f5f5;
+  padding: 8px;
+  border-radius: 5px;
+}
+
+.contacto {
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #eee;
+  font-size: 0.95rem;
+}
+
+.contacto p {
+  margin: 4px 0;
+}
+
+.btn-reportar {
+  width: 100%;
+  margin-top: 18px;
+  padding: 12px;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 1rem;
+}
+
+.btn-reportar:hover {
+  background-color: #ff5252;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+}
+
+@media (max-width: 600px) {
+  .modal-reporte {
+    max-width: 98vw;
+    padding: 0 0 1rem 0;
+  }
+  .modal-reporte-content {
+    padding: 1.2rem 0.5rem 0 0.5rem;
+  }
+  .modal-reporte-foto {
+    height: 120px;
+  }
+  .modal-reporte-info h2 {
+    font-size: 1.3rem;
+  }
+}
