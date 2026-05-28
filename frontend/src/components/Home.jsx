@@ -2,9 +2,12 @@
 import '../css/Home.css';
 import { Link, useLocation } from 'react-router-dom';
 import MapaInteractivo from './MapaInteractivo';
+import { useState } from 'react';
+import Reportes from './Reportes';
 
 export default function Home() {
   const location = useLocation();
+  const [modalOpen, setModalOpen] = useState(false);
   return (
     <main className="home">
       <section className="hero-section bg-light py-5">
@@ -29,8 +32,14 @@ export default function Home() {
 
       <section className="mapa-section">
         <div className="container">
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+            <button className="btn btn-primary" onClick={() => setModalOpen(true)}>
+              Nuevo Reporte
+            </button>
+          </div>
           <MapaInteractivo />
         </div>
+        <Reportes open={modalOpen} onClose={() => setModalOpen(false)} />
       </section>
 
       <section className="cta-section">

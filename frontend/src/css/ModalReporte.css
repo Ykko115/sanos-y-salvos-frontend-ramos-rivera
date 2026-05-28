@@ -1,3 +1,16 @@
+/* Mapa en el modal de reportes estilo registro/login */
+.mapa-modal-registro {
+  width: 100%;
+  min-width: 400px;
+  max-width: 820px;
+  height: 360px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+  border: 1.5px solid #e0e0e0;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
 .modal-reporte-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -17,12 +30,15 @@
 .modal-reporte {
   background: #fff;
   border-radius: 16px;
-  max-width: 600px;
-  width: 95vw;
+  max-width: 900px;
+  width: 98vw;
+  min-width: 320px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.18);
   position: relative;
-  padding: 0 0 1.5rem 0;
+  padding: 0 0 2.5rem 0;
   animation: modalPop 0.2s;
+  max-height: 95vh;
+  overflow-y: auto;
 }
 
 @keyframes modalPop {
