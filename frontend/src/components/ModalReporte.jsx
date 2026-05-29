@@ -7,7 +7,7 @@ export default function ModalReporte({ open, onClose, mascota }) {
       <div className="modal-reporte" onClick={e => e.stopPropagation()}>
         <button className="modal-reporte-close" onClick={onClose}>&times;</button>
         <div className="modal-reporte-content">
-          <img src={mascota.foto} alt={mascota.nombre} className="modal-reporte-foto" />
+          <img src={mascota.img || mascota.foto || mascota.imagen || ''} alt={mascota.nombre} className="modal-reporte-foto" />
           <div className="modal-reporte-info">
             <h2>{mascota.nombre}</h2>
             <p className="especie-raza">{mascota.especie} - {mascota.raza}</p>
@@ -17,8 +17,8 @@ export default function ModalReporte({ open, onClose, mascota }) {
             <p className="ubicacion"><strong>Última ubicación:</strong> {mascota.ubicacion.nombre}</p>
             <div className="contacto">
               <p><strong>Contacto:</strong></p>
-              <p>📱 {mascota.contacto.telefono}</p>
-              <p>📧 {mascota.contacto.email}</p>
+              <p>📱 {mascota.contacto?.telefono || 'No disponible'}</p>
+              <p>📧 {mascota.contacto?.email || 'No disponible'}</p>
             </div>
             <button className="btn-reportar">He visto esta mascota</button>
           </div>

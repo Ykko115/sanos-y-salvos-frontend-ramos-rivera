@@ -15,7 +15,8 @@ const pinIcon = L.divIcon({
 });
 
 function MapaSelector({ onSelect, markerPosition }) {
-  // Maipú, Chile por defecto
+  // Maipú, Chile por defecto 
+  // eslint-disable-next-line no-unused-vars
   const center = markerPosition || [-33.5167, -70.7617];
   useMapEvents({
     click(e) {
@@ -26,11 +27,12 @@ function MapaSelector({ onSelect, markerPosition }) {
 }
 
 
-export default function ReportesModal({ open, onClose, onSubmit }) {
+export default function ReportesModal({ open, onClose }) {
   const [descripcion, setDescripcion] = useState("");
   const [fechaReporte, setFechaReporte] = useState(() => new Date().toISOString().slice(0,10));
-  const [img, setImg] = useState("");
+  const [imgFile, setImgFile] = useState(null);
   const [imgPreview, setImgPreview] = useState("");
+  const [imgUrl, setImgUrl] = useState(""); // <-- NUEVO estado para la URL pública
   const fileInputRef = useRef();
   const [estado, setEstado] = useState("PERDIDO");
   const [coordenadas, setCoordenadas] = useState(null);
@@ -41,6 +43,7 @@ export default function ReportesModal({ open, onClose, onSubmit }) {
   const [usuario, setUsuario] = useState(null);
   const [mensaje, setMensaje] = useState("");
   const [mensajeTipo, setMensajeTipo] = useState(""); // 'success' | 'error'
+  const [exito, setExito] = useState(false); // Para animación de éxito
 
   useEffect(() => {
     const cargarUsuario = () => {
@@ -117,32 +120,52 @@ export default function ReportesModal({ open, onClose, onSubmit }) {
     );
   }
 
-  // Manejo de imagen: guarda la imagen en base64 y la muestra
+  // Manejo de imagen: guarda el archivo y la previsualización
   const handleImgChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setImgFile(file);
       const reader = new FileReader();
       reader.onload = function(evt) {
-        setImg(evt.target.result); // base64
         setImgPreview(evt.target.result);
-        // Opcional: guardar en localStorage
-        localStorage.setItem('reporte_img', evt.target.result);
       };
       reader.readAsDataURL(file);
     } else {
-      setImg("");
+      setImgFile(null);
       setImgPreview("");
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!coordenadas) return;
+    let imageUrl = "";
+    // Subir imagen si existe
+    if (imgFile) {
+      const formData = new FormData();
+      formData.append('file', imgFile);
+      try {
+        const res = await fetch('http://localhost:8080/api/reportes/upload-image', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (!res.ok || !data.url) throw new Error(data.message || 'Error al subir imagen');
+        imageUrl = data.url;
+        setImgUrl(data.url); // <-- Guarda la URL pública
+      } catch (err) {
+        setMensaje('Error al subir la imagen: ' + err.message);
+        setMensajeTipo('error');
+        setTimeout(() => setMensaje(""), 4000);
+        setImgUrl(""); // Limpia la URL si hay error
+        return;
+      }
+    }
     // Construir el objeto de reporte
     let reporte = {
       descripcion,
       fechaReporte,
-      img, // base64
+      img: imageUrl, // URL de Cloudflare
       estado,
       ubicacion: {
         latitude: coordenadas[0],
@@ -165,39 +188,29 @@ export default function ReportesModal({ open, onClose, onSubmit }) {
       };
     }
     // Enviar el reporte al backend
-    console.log('Enviando reporte:', reporte);
-    fetch('http://localhost:8080/api/reportes', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(reporte)
-    })
-      .then(async res => {
-        let data;
-        try {
-          data = await res.json();
-        } catch {
-          data = null;
-        }
-        if (!res.ok) {
-          const msg = (data && data.message) ? data.message : 'Error al crear el reporte';
-          throw new Error(msg);
-        }
-        return data;
-      })
-      .then(data => {
-        setMensaje('¡Reporte enviado correctamente!');
-        setMensajeTipo('success');
-        console.log('Reporte creado correctamente:', data);
-        setTimeout(() => setMensaje(""), 4000);
-      })
-      .catch(err => {
-        setMensaje('Error al enviar el reporte: ' + err.message);
-        setMensajeTipo('error');
-        console.error('Error al crear el reporte:', err);
-        setTimeout(() => setMensaje(""), 4000);
+    try {
+      const res = await fetch('http://localhost:8080/api/reportes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(reporte)
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data && data.message ? data.message : 'Error al crear el reporte');
+      setMensaje('¡Reporte enviado correctamente!');
+      setMensajeTipo('success');
+      setExito(true);
+      setTimeout(() => {
+        setMensaje("");
+        setExito(false);
+        onClose();
+      }, 1800);
+    } catch (err) {
+      setMensaje('Error al enviar el reporte: ' + err.message);
+      setMensajeTipo('error');
+      setTimeout(() => setMensaje(""), 4000);
+    }
     // Limpiar formulario solo si fue exitoso, y no cerrar el modal aún
     // El cierre del modal será manual o tras mostrar el mensaje de éxito
   };
@@ -206,18 +219,7 @@ export default function ReportesModal({ open, onClose, onSubmit }) {
     <div className="modal-reporte-overlay" onClick={onClose}>
       <div className="modal-reporte" onClick={e => e.stopPropagation()}>
         {mensaje && (
-          <div style={{
-            marginBottom: '1rem',
-            padding: '10px',
-            borderRadius: '6px',
-            background: mensajeTipo === 'success' ? '#d4edda' : '#f8d7da',
-            color: mensajeTipo === 'success' ? '#155724' : '#721c24',
-            border: mensajeTipo === 'success' ? '1px solid #c3e6cb' : '1px solid #f5c6cb',
-            textAlign: 'center',
-            fontWeight: 500
-          }}>
-            {mensaje}
-          </div>
+          <div className={`modal-reporte-mensaje ${mensajeTipo} ${exito ? 'modal-reporte-mensaje-exito' : ''}`}>{mensaje}</div>
         )}
         <button className="modal-reporte-close" onClick={onClose}>&times;</button>
         <form className="modal-reporte-content" onSubmit={handleSubmit}>
@@ -231,7 +233,7 @@ export default function ReportesModal({ open, onClose, onSubmit }) {
                   value={mascotaId}
                   onChange={e => setMascotaId(e.target.value)}
                   required
-                  style={{marginBottom: '1rem', width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc'}}
+                  className="modal-reporte-input"
                 >
                   <option value="">Selecciona una mascota</option>
                   {mascotasUsuario.map(m => (
@@ -248,7 +250,7 @@ export default function ReportesModal({ open, onClose, onSubmit }) {
                   value={nombreMascota}
                   onChange={e => setNombreMascota(e.target.value)}
                   required
-                  style={{marginBottom: '1rem', width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc'}}
+                  className="modal-reporte-input"
                 />
                 <label htmlFor="nombreUsuario">Tu nombre:</label>
                 <input
@@ -257,7 +259,7 @@ export default function ReportesModal({ open, onClose, onSubmit }) {
                   value={nombreUsuario}
                   onChange={e => setNombreUsuario(e.target.value)}
                   required
-                  style={{marginBottom: '1rem', width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc'}}
+                  className="modal-reporte-input"
                 />
               </>
             )}
@@ -269,7 +271,7 @@ export default function ReportesModal({ open, onClose, onSubmit }) {
               onChange={e => setDescripcion(e.target.value)}
               required
               rows={3}
-              style={{marginBottom: '1rem', width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc'}}
+              className="modal-reporte-input"
             />
 
             <label htmlFor="fechaReporte">Fecha del reporte:</label>
@@ -279,7 +281,7 @@ export default function ReportesModal({ open, onClose, onSubmit }) {
               value={fechaReporte}
               onChange={e => setFechaReporte(e.target.value)}
               required
-              style={{marginBottom: '1rem', width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc'}}
+              className="modal-reporte-input"
             />
 
             <label htmlFor="img">Imagen:</label>
@@ -289,11 +291,18 @@ export default function ReportesModal({ open, onClose, onSubmit }) {
               accept="image/*"
               ref={fileInputRef}
               onChange={handleImgChange}
-              style={{marginBottom: '1rem', width: '100%'}}
+              className="modal-reporte-input-file"
             />
             {imgPreview && (
-              <div style={{marginBottom:'1rem', textAlign:'center'}}>
-                <img src={imgPreview} alt="Previsualización" style={{maxWidth:'220px', maxHeight:'180px', borderRadius:'8px', boxShadow:'0 2px 8px rgba(0,0,0,0.08)'}} />
+              <div className="modal-reporte-img-preview">
+                <img src={imgPreview} alt="Previsualización" />
+              </div>
+            )}
+            {imgUrl && (
+              <div className="modal-reporte-img-publica">
+                <p>Imagen subida correctamente:</p>
+                <a href={imgUrl} target="_blank" rel="noopener noreferrer">{imgUrl}</a>
+                <img src={imgUrl} alt="Imagen subida" style={{maxWidth: 200, marginTop: 8}} />
               </div>
             )}
 
@@ -303,13 +312,13 @@ export default function ReportesModal({ open, onClose, onSubmit }) {
               value={estado}
               onChange={e => setEstado(e.target.value)}
               required
-              style={{marginBottom: '1.5rem', width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc'}}
+              className="modal-reporte-input modal-reporte-input-estado"
             >
               <option value="PERDIDO">Perdido</option>
               <option value="ENCONTRADO">Encontrado</option>
             </select>
 
-            <label style={{display:'block', marginBottom:'0.5rem', fontWeight:'600', color:'#333'}}>Selecciona la ubicación en el mapa:</label>
+            <label className="modal-reporte-label-mapa">Selecciona la ubicación en el mapa:</label>
             <div className="mapa-modal-registro">
               <MapContainer center={coordenadas || [-33.5167, -70.7617]} zoom={15} style={{width:'100%', height:'340px'}}>
                 <TileLayer
@@ -323,7 +332,7 @@ export default function ReportesModal({ open, onClose, onSubmit }) {
               </MapContainer>
             </div>
             {coordenadas && (
-              <div style={{marginTop:'0.5rem', fontSize:'0.95rem', color:'#333'}}>
+              <div className="modal-reporte-coords">
                 <strong>Latitud:</strong> {coordenadas[0].toFixed(6)}<br/>
                 <strong>Longitud:</strong> {coordenadas[1].toFixed(6)}
               </div>

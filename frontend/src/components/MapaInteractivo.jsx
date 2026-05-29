@@ -2,7 +2,7 @@ import { MapContainer, TileLayer, Marker, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../css/MapaInteractivo.css';
-import { mascotasPerdidas as mascotasEjemplo } from '../js/datos_mascotas';
+// import { mascotasPerdidas as mascotasEjemplo } from '../js/datos_mascotas';
 import { useEffect, useRef, useState } from 'react';
 import ModalReporte from './ModalReporte';
 
@@ -34,8 +34,23 @@ export default function MapaInteractivo() {
   const [userLocation, setUserLocation] = useState(null);
   // Estado para el reporte seleccionado (para el modal)
   const [reporteSeleccionado, setReporteSeleccionado] = useState(null);
-  // Estado para los reportes (fijos en Maipú si no hay ubicación)
-  const [mascotas] = useState(mascotasEjemplo);
+  // Estado para los reportes obtenidos del backend
+  const [mascotas, setMascotas] = useState([]);
+    // Obtener reportes desde el backend al montar el componente
+    useEffect(() => {
+      fetch('http://localhost:8080/api/reportes')
+        .then(res => {
+          if (!res.ok) throw new Error('Error al obtener reportes');
+          return res.json();
+        })
+        .then(data => {
+          // Asegura que sea un array
+          setMascotas(Array.isArray(data) ? data : []);
+        })
+        .catch(() => {
+          setMascotas([]);
+        });
+    }, []);
   // Estado para error de ubicación
   const [geoError, setGeoError] = useState(null);
 
@@ -95,14 +110,16 @@ export default function MapaInteractivo() {
 
         {/* Marcadores para cada mascota */}
         {mascotas.map((mascota) => (
-          <Marker
-            key={mascota.id}
-            position={[mascota.ubicacion.latitude, mascota.ubicacion.longitude]}
-            icon={createCustomIcon(mascota.especie)}
-            eventHandlers={{
-              click: () => setReporteSeleccionado(mascota),
-            }}
-          />
+          mascota.ubicacion && mascota.ubicacion.latitude && mascota.ubicacion.longitude ? (
+            <Marker
+              key={mascota.id}
+              position={[mascota.ubicacion.latitude, mascota.ubicacion.longitude]}
+              icon={createCustomIcon(mascota.especie || mascota.tipo || 'Perro')}
+              eventHandlers={{
+                click: () => setReporteSeleccionado(mascota),
+              }}
+            />
+          ) : null
         ))}
       </MapContainer>
       <ModalReporte open={!!reporteSeleccionado} onClose={() => setReporteSeleccionado(null)} mascota={reporteSeleccionado} />
