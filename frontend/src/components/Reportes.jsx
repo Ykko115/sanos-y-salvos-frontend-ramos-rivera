@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import "../css/ModalReporte.css";
+import { validarTelefono } from "../js/validaciones";
 
 
 // Icono personalizado para el pin
@@ -43,7 +44,7 @@ export default function ReportesModal({ open, onClose }) {
   const [usuario, setUsuario] = useState(null);
   const [mensaje, setMensaje] = useState("");
   const [mensajeTipo, setMensajeTipo] = useState(""); // 'success' | 'error'
-  const [exito, setExito] = useState(false); // Para animación de éxito
+  const [telefono, setTelefono] = useState("");
 
   useEffect(() => {
     const cargarUsuario = () => {
@@ -61,6 +62,9 @@ export default function ReportesModal({ open, onClose }) {
           } else if (usuarioLS.user && usuarioLS.user.id) {
             setUsuario(usuarioLS.user);
             setUsuarioId(usuarioLS.user.id);
+            if (usuarioLS.user.telefono) {
+              setTelefono(String(usuarioLS.user.telefono));
+            }
             // Fetch mascotas asociadas al usuario desde el backend
             fetch(`http://localhost:8080/api/usuario/${usuarioLS.user.id}/mascotas`)
               .then(res => {
@@ -139,6 +143,23 @@ export default function ReportesModal({ open, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!coordenadas) return;
+
+    if (!usuario) {
+      if (!telefono) {
+        setMensaje('El teléfono es requerido');
+        setMensajeTipo('error');
+        setTimeout(() => setMensaje(""), 4000);
+        return;
+      }
+
+      if (!validarTelefono(telefono)) {
+        setMensaje('Ingresa un teléfono válido');
+        setMensajeTipo('error');
+        setTimeout(() => setMensaje(""), 4000);
+        return;
+      }
+    }
+
     let imageUrl = "";
     // Subir imagen si existe
     if (imgFile) {
@@ -172,6 +193,12 @@ export default function ReportesModal({ open, onClose }) {
         longitude: coordenadas[1]
       }
     };
+    if (telefono) {
+      reporte = {
+        ...reporte,
+        telefono,
+      };
+    }
     if (usuario) {
       if (!mascotaId) return;
       reporte = {
@@ -198,14 +225,8 @@ export default function ReportesModal({ open, onClose }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data && data.message ? data.message : 'Error al crear el reporte');
-      setMensaje('¡Reporte enviado correctamente!');
-      setMensajeTipo('success');
-      setExito(true);
-      setTimeout(() => {
-        setMensaje("");
-        setExito(false);
-        onClose();
-      }, 1800);
+      alert('¡Reporte enviado correctamente!');
+      onClose();
     } catch (err) {
       setMensaje('Error al enviar el reporte: ' + err.message);
       setMensajeTipo('error');
@@ -219,7 +240,7 @@ export default function ReportesModal({ open, onClose }) {
     <div className="modal-reporte-overlay" onClick={onClose}>
       <div className="modal-reporte" onClick={e => e.stopPropagation()}>
         {mensaje && (
-          <div className={`modal-reporte-mensaje ${mensajeTipo} ${exito ? 'modal-reporte-mensaje-exito' : ''}`}>{mensaje}</div>
+          <div className={`modal-reporte-mensaje ${mensajeTipo}`}>{mensaje}</div>
         )}
         <button className="modal-reporte-close" onClick={onClose}>&times;</button>
         <form className="modal-reporte-content" onSubmit={handleSubmit}>
@@ -263,6 +284,40 @@ export default function ReportesModal({ open, onClose }) {
                 />
               </>
             )}
+
+            {!usuario ? (
+              <>
+                <label htmlFor="telefono">Teléfono</label>
+                <div className="modal-reporte-phone-wrapper">
+                  <span className="modal-reporte-phone-prefix">+56</span>
+                  <input
+                    id="telefono"
+                    type="tel"
+                    value={(() => {
+                      let raw = telefono.replace(/[^\d]/g, '');
+                      if (!raw) return '';
+                      let out = raw[0] || '';
+                      if (raw.length > 1) out += ' ' + raw.slice(1, 5);
+                      if (raw.length > 5) out += ' ' + raw.slice(5, 9);
+                      if (raw.length > 9) out += ' ' + raw.slice(9, 13);
+                      return out;
+                    })()}
+                    onChange={e => {
+                      let value = e.target.value.replace(/[^\d]/g, '');
+                      setTelefono(value);
+                    }}
+                    placeholder="9 1234 5678"
+                    className="modal-reporte-input"
+                    maxLength={12}
+                    required
+                  />
+                </div>
+              </>
+            ) : telefono ? (
+              <div className="modal-reporte-telefono-registrado">
+                <strong>Teléfono registrado:</strong> +56 {telefono}
+              </div>
+            ) : null}
 
             <label htmlFor="descripcion">Descripción (agrega tu método de contacto):</label>
             <textarea
