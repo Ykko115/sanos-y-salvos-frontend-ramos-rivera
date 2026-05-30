@@ -29,6 +29,15 @@ export default function Home() {
 
       <section className="mapa-section">
         <div className="container">
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+            <Link
+              to="/reportes"
+              state={{ backgroundLocation: location }}
+              className="btn btn-primary"
+            >
+              Nuevo Reporte
+            </Link>
+          </div>
           <MapaInteractivo />
         </div>
       </section>
