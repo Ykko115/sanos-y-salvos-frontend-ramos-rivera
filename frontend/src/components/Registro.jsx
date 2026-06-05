@@ -76,7 +76,7 @@ export default function Registro() {
                   establecerDatosFormulario(anterior => ({ ...anterior, rut: v }));
                   if (establecerErrores) establecerErrores(anterior => ({ ...anterior, rut: '' }));
                 }}
-                placeholder="21.714.477-9"
+                placeholder="11.111.111-K"
                 className={errores.rut ? 'input-error' : ''}
               />
               {errores.rut && (

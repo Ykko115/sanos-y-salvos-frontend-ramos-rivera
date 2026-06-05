@@ -54,8 +54,15 @@ export const crearManejadorEnvioLogin = (
 
       // Si el backend retorna el usuario autenticado
       const usuario = await respuesta.json();
-      // Guardar usuario en localStorage para que Navbar lo detecte
-      localStorage.setItem('usuario', JSON.stringify(usuario));
+      // Suponiendo que el backend retorna un campo "exp" (timestamp de expiración en segundos) en el usuario o token
+      // Si no, puedes calcularlo aquí según la duración del token (por ejemplo, 1 hora)
+      let exp = usuario.exp;
+      if (!exp) {
+        // Si no viene del backend, asume 11 minutos desde ahora
+        exp = Math.floor(Date.now() / 1000) + 660;
+      }
+      const usuarioConExp = { ...usuario, exp };
+      localStorage.setItem('usuario', JSON.stringify(usuarioConExp));
 
       alert('¡Bienvenido!');
       alCerrar();
@@ -112,7 +119,12 @@ export const crearManejadorEnvioRegistro = (
 
       // Guardar usuario en localStorage si el backend retorna el usuario y/o token
       const usuarioRegistrado = await respuesta.json();
-      localStorage.setItem('usuario', JSON.stringify(usuarioRegistrado));
+      let exp = usuarioRegistrado.exp;
+      if (!exp) {
+        exp = Math.floor(Date.now() / 1000) + 660;
+      }
+      const usuarioConExp = { ...usuarioRegistrado, exp };
+      localStorage.setItem('usuario', JSON.stringify(usuarioConExp));
 
       alert('¡Registro exitoso! Bienvenido a Sanos y Salvos');
       alCerrar();

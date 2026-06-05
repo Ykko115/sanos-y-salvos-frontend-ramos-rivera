@@ -1,6 +1,7 @@
 
 import '../css/Home.css';
 import { Link, useLocation } from 'react-router-dom';
+import MapaInteractivo from './MapaInteractivo';
 
 export default function Home() {
   const location = useLocation();
@@ -25,46 +26,19 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="features-section">
-        <div className="features-container">
-          <h2>¿Cómo Funciona?</h2>
-          <div className="features-grid">
-            <div className="feature-card">
-              <div className="feature-icon">🔍</div>
-              <h3>Buscar Mascotas</h3>
-              <p>
-                Explora miles de reportes de mascotas perdidas y encuentra la
-                tuya o ayuda a otros a encontrar la suya.
-              </p>
-            </div>
 
-            <div className="feature-card">
-              <div className="feature-icon">📢</div>
-              <h3>Reportar Mascotas</h3>
-              <p>
-                Si perdiste tu mascota, crea un reporte detallado con fotos y
-                descripción. Nuestra comunidad te ayudará.
-              </p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">🤝</div>
-              <h3>Comunidad Activa</h3>
-              <p>
-                Únete a miles de personas comprometidas con el bienestar y la
-                seguridad de los animales.
-              </p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">📱</div>
-              <h3>100% Responsivo</h3>
-              <p>
-                Accede desde cualquier dispositivo. Tu mascota podría estar en
-                cualquier lugar.
-              </p>
-            </div>
+      <section className="mapa-section">
+        <div className="container">
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+            <Link
+              to="/reportes"
+              state={{ backgroundLocation: location }}
+              className="btn btn-primary"
+            >
+              Nuevo Reporte
+            </Link>
           </div>
+          <MapaInteractivo />
         </div>
       </section>
 
