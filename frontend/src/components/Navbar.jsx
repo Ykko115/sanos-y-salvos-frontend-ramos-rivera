@@ -7,7 +7,11 @@ import '../css/Navbar.css';
 export default function Navbar() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownUserOpen, setDropdownUserOpen] = useState(false);
   const [user, setUser] = useState(null); // user: { nombre, rol }
+  const dropdownTimeoutRef = React.useRef(null);
+  const dropdownUserTimeoutRef = React.useRef(null);
 
   // Efecto para cargar usuario desde localStorage/sessionStorage si existe
   // Puedes cambiar a sessionStorage si prefieres
@@ -64,10 +68,35 @@ export default function Navbar() {
     navigate('/registro', { state: { backgroundLocation: location } });
   };
 
+  const handleRegistroMascota = () => {
+    if (!user) {
+      // Si no está logueado, redirigir a login
+      setMenuOpen(false);
+      navigate('/login', { state: { backgroundLocation: location } });
+      return;
+    }
+    setMenuOpen(false);
+    navigate('/registromascota', { state: { backgroundLocation: location } });
+  };
+
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('usuario');
     setMenuOpen(false);
+    setDropdownUserOpen(false);
+    navigate('/');
+  };
+
+  const handleNavigatePerfil = () => {
+    setMenuOpen(false);
+    setDropdownUserOpen(false);
+    navigate('/perfil');
+  };
+
+  const handleNavigateMascotas = () => {
+    setMenuOpen(false);
+    setDropdownUserOpen(false);
+    navigate('/mis-mascotas');
   };
 
   // Renderizado condicional de la sección de usuario
@@ -104,12 +133,49 @@ export default function Navbar() {
       nombreCompleto = user.user.apellido;
     }
     authSection = (
-      <>
-        <span className="nav-link user-name" tabIndex={-1}>{nombreCompleto || user.user.email}</span>
-        <button className="nav-link btn-logout" onClick={handleLogout}>
-          Cerrar Sesión
+      <div 
+        className="user-dropdown" 
+        onMouseEnter={() => {
+          if (dropdownUserTimeoutRef.current) clearTimeout(dropdownUserTimeoutRef.current);
+          setDropdownUserOpen(true);
+        }}
+        onMouseLeave={() => {
+          dropdownUserTimeoutRef.current = setTimeout(() => {
+            setDropdownUserOpen(false);
+          }, 300);
+        }}
+      >
+        <button 
+          className="nav-link user-name btn-perfil" 
+          onClick={() => setDropdownUserOpen(!dropdownUserOpen)}
+          title="Mi perfil"
+        >
+          👤 {nombreCompleto || user.user.email} ▼
         </button>
-      </>
+        {dropdownUserOpen && (
+          <div className="dropdown-user-menu">
+            <button 
+              className="dropdown-user-item" 
+              onClick={handleNavigatePerfil}
+            >
+              👤 Mi Perfil
+            </button>
+            <button 
+              className="dropdown-user-item" 
+              onClick={handleNavigateMascotas}
+            >
+              🐾 Mis Mascotas
+            </button>
+            <div className="dropdown-divider"></div>
+            <button 
+              className="dropdown-user-item logout-item" 
+              onClick={handleLogout}
+            >
+              🚪 Cerrar Sesión
+            </button>
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -144,9 +210,9 @@ export default function Navbar() {
               </a>
             </li>
             <li className="nav-item">
-              <a href="#reportar" className="nav-link" onClick={() => setMenuOpen(false)}>
-                Reportar Mascota
-              </a>
+              <button className="nav-link" onClick={handleRegistroMascota} style={{background: 'none', border: 'none', cursor: 'pointer', padding: 0}}>
+                Registrar Mascota
+              </button>
             </li>
             <li className="nav-item">
               <a href="#contacto" className="nav-link" onClick={() => setMenuOpen(false)}>
@@ -155,14 +221,47 @@ export default function Navbar() {
             </li>
             <li className="nav-item auth-buttons">
               {!user ? (
-                <>
-                  <button className="btn-login" onClick={handleLogin}>
-                    Iniciar Sesión
+                <div 
+                  className="auth-dropdown" 
+                  onMouseEnter={() => {
+                    if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current);
+                    setDropdownOpen(true);
+                  }}
+                  onMouseLeave={() => {
+                    dropdownTimeoutRef.current = setTimeout(() => {
+                      setDropdownOpen(false);
+                    }, 500);
+                  }}
+                >
+                  <button 
+                    className="btn-auth-main"
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                  >
+                    Hola, Inicia sesión ▼
                   </button>
-                  <button className="btn-register" onClick={handleRegister}>
-                    Registrarse
-                  </button>
-                </>
+                  {dropdownOpen && (
+                    <div className="dropdown-menu">
+                      <button 
+                        className="dropdown-item" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLogin();
+                        }}
+                      >
+                        Inicia sesión
+                      </button>
+                      <button 
+                        className="dropdown-item" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRegister();
+                        }}
+                      >
+                        Regístrate
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : authSection}
             </li>
           </ul>
