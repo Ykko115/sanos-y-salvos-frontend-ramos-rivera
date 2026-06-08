@@ -66,7 +66,7 @@ export default function ReportesModal({ open, onClose }) {
               setTelefono(String(usuarioLS.user.telefono));
             }
             // Fetch mascotas asociadas al usuario desde el backend
-            fetch(`http://localhost:8080/api/usuario/${usuarioLS.user.id}/mascotas`)
+            fetch(`/api/usuario/${usuarioLS.user.id}/mascotas`)
               .then(res => {
                 if (!res.ok) throw new Error('Error al obtener mascotas');
                 return res.json();
@@ -166,7 +166,7 @@ export default function ReportesModal({ open, onClose }) {
       const formData = new FormData();
       formData.append('file', imgFile);
       try {
-        const res = await fetch('http://localhost:8080/api/reportes/upload-image', {
+        const res = await fetch('/api/reportes/upload-image', {
           method: 'POST',
           body: formData
         });
@@ -216,7 +216,7 @@ export default function ReportesModal({ open, onClose }) {
     }
     // Enviar el reporte al backend
     try {
-      const res = await fetch('http://localhost:8080/api/reportes', {
+      const res = await fetch('/api/reportes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
