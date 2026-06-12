@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { getToken } from '../js/auth';
 import '../css/Navbar.css';
 
 
@@ -19,18 +20,16 @@ export default function Navbar() {
   // Efecto para cargar usuario desde localStorage y escuchar cambios
   React.useEffect(() => {
     const cargarUsuario = () => {
+      // getToken() decodifica el JWT, elimina localStorage si expiró y retorna null
+      const token = getToken();
+      if (!token) {
+        setUser(null);
+        return;
+      }
       const usuarioGuardado = localStorage.getItem('usuario');
       if (usuarioGuardado) {
         try {
-          const usuario = JSON.parse(usuarioGuardado);
-          // Verificar expiración del token
-          if (usuario.exp && Date.now() / 1000 > usuario.exp) {
-            // Token expirado: eliminar usuario y cerrar sesión
-            localStorage.removeItem('usuario');
-            setUser(null);
-          } else {
-            setUser(usuario);
-          }
+          setUser(JSON.parse(usuarioGuardado));
         } catch {
           setUser(null);
         }
@@ -115,12 +114,43 @@ export default function Navbar() {
     );
   } else if (user.user && user.user.rol && user.user.rol.toLowerCase() === 'admin') {
     authSection = (
-      <>
-        <span className="nav-link user-role" tabIndex={-1}>Administración</span>
-        <button className="nav-link btn-logout" onClick={handleLogout}>
-          Cerrar Sesión
+      <div
+        className="user-dropdown"
+        onMouseEnter={() => {
+          if (dropdownUserTimeoutRef.current) clearTimeout(dropdownUserTimeoutRef.current);
+          setDropdownUserOpen(true);
+        }}
+        onMouseLeave={() => {
+          dropdownUserTimeoutRef.current = setTimeout(() => setDropdownUserOpen(false), 300);
+        }}
+      >
+        <button
+          className="nav-link user-name btn-perfil"
+          onClick={() => setDropdownUserOpen(!dropdownUserOpen)}
+        >
+          🛡️ Admin ▼
         </button>
-      </>
+        {dropdownUserOpen && (
+          <div className="dropdown-user-menu">
+            <button className="dropdown-user-item" onClick={() => { setDropdownUserOpen(false); navigate('/admin'); }}>
+              🏠 Panel Admin
+            </button>
+            <button className="dropdown-user-item" onClick={() => { setDropdownUserOpen(false); navigate('/admin/usuarios'); }}>
+              👥 Usuarios
+            </button>
+            <button className="dropdown-user-item" onClick={() => { setDropdownUserOpen(false); navigate('/admin/reportes'); }}>
+              📋 Reportes
+            </button>
+            <button className="dropdown-user-item" onClick={() => { setDropdownUserOpen(false); navigate('/admin/mascotas'); }}>
+              🐾 Mascotas
+            </button>
+            <div className="dropdown-divider"></div>
+            <button className="dropdown-user-item logout-item" onClick={handleLogout}>
+              🚪 Cerrar Sesión
+            </button>
+          </div>
+        )}
+      </div>
     );
   } else if (user.user && user.user.rol && user.user.rol.toLowerCase() === 'user') {
     // Mostrar nombre completo si está disponible, si no el email

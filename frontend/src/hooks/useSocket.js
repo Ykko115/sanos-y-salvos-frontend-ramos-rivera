@@ -7,7 +7,7 @@ export function useSocket() {
   const socketRef = useRef(null);
 
   useEffect(() => {
-    const socket = io('http://localhost:3001', {
+    const socket = io('/', {
       autoConnect: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 2000,
