@@ -1,5 +1,17 @@
 {
+  "name": "sanos-y-salvos-server",
+  "version": "1.0.0",
+  "description": "Servidor Socket.io + coincidencias para Sanos y Salvos",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
-    "react-router-dom": "^7.14.2"
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "pdfmake": "^0.2.9",
+    "socket.io": "^4.7.4",
+    "xlsx": "^0.18.5"
   }
 }

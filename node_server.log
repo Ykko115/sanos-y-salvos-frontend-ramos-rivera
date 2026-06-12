@@ -1,0 +1,21 @@
+
+[OK] Servidor Socket.io listo en http://localhost:3001
+     GET /api/coincidencias
+     GET /api/reportes/resumen
+     GET /api/reportes/exportar?formato=pdf|xlsx
+
+[socket] cliente conectado: DH-HmLm_CiJruAOlAAAC
+[socket] cliente desconectado: DH-HmLm_CiJruAOlAAAC
+[socket] cliente conectado: v4QefN8EBNzoGgvmAAAF
+[socket] cliente desconectado: v4QefN8EBNzoGgvmAAAF
+[socket] cliente conectado: y1ZIO_LPMyAjv98gAAAI
+[socket] cliente desconectado: y1ZIO_LPMyAjv98gAAAI
+[socket] cliente conectado: XPqAqbLf1_YauJZdAAAL
+[socket] cliente desconectado: XPqAqbLf1_YauJZdAAAL
+[socket] cliente conectado: NaPT5kyxaLl3uFB6AAAO
+[socket] cliente desconectado: NaPT5kyxaLl3uFB6AAAO
+[socket] cliente conectado: S-OxTATBWEPz4wOJAAAR
+[socket] cliente desconectado: S-OxTATBWEPz4wOJAAAR
+[socket] cliente conectado: 9hDD4tQ7CQHoo4qmAAAU
+[socket] cliente desconectado: 9hDD4tQ7CQHoo4qmAAAU
+[socket] cliente conectado: Ou3egFpTBoqgZxRbAAAX

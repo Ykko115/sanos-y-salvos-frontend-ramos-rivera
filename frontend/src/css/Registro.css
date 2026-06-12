@@ -207,6 +207,75 @@
   text-decoration: none;
 }
 
+.forgot-password {
+  color: #27ae60;
+  font-size: 0.9rem;
+  text-align: right;
+  text-decoration: none;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
+
+/* Bienvenida tras login */
+.login-bienvenida {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem 2rem;
+  text-align: center;
+  animation: slideUp 0.4s ease;
+}
+
+.bienvenida-icono {
+  font-size: 4rem;
+  animation: pulse 1s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.login-bienvenida h2 {
+  color: #27ae60;
+  font-size: 1.6rem;
+  margin: 0;
+  font-weight: 700;
+}
+
+.login-bienvenida p {
+  color: #666;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.bienvenida-barra {
+  width: 100%;
+  max-width: 240px;
+  height: 4px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.bienvenida-barra-progreso {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  border-radius: 4px;
+  animation: progreso 2s linear forwards;
+}
+
+@keyframes progreso {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
 @media (max-width: 768px) {
   .form-row {
     grid-template-columns: 1fr;

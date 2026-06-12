@@ -1,10 +1,42 @@
-
 import '../css/Home.css';
 import { Link, useLocation } from 'react-router-dom';
 import MapaInteractivo from './MapaInteractivo';
+import SidebarPanel from './Sidebar/SidebarPanel';
+import { useAppContext } from '../context/AppContext';
+import { useCoincidencias } from '../hooks/useCoincidencias';
+
+function BtnSidebar() {
+  const { state, dispatch } = useAppContext();
+  const noLeidas = state.notificaciones.filter((n) => !n.leida).length;
+  const coincidencias = state.coincidencias.length;
+  const total = noLeidas + coincidencias;
+
+  const abrir = () => {
+    dispatch({ type: 'ABRIR_SIDEBAR' });
+    dispatch({ type: 'SET_TAB', payload: noLeidas > 0 ? 'notif' : 'coincidencias' });
+  };
+
+  return (
+    <button className="btn-sidebar-toggle" onClick={abrir}>
+      🔔 Panel
+      {total > 0 && <span className="btn-sidebar-badge">{total}</span>}
+    </button>
+  );
+}
+
+function MapaConSidebar() {
+  useCoincidencias();
+  return (
+    <>
+      <MapaInteractivo />
+      <SidebarPanel />
+    </>
+  );
+}
 
 export default function Home() {
   const location = useLocation();
+
   return (
     <main className="home">
       <section className="hero-section bg-light py-5">
@@ -26,19 +58,19 @@ export default function Home() {
         </div>
       </section>
 
-
       <section className="mapa-section">
         <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginBottom: '1rem' }}>
+            <BtnSidebar />
             <Link
-              to="/reportes"
+              to="/nuevo-reporte"
               state={{ backgroundLocation: location }}
               className="btn btn-primary"
             >
               Nuevo Reporte
             </Link>
           </div>
-          <MapaInteractivo />
+          <MapaConSidebar />
         </div>
       </section>
 
@@ -61,4 +93,3 @@ export default function Home() {
     </main>
   );
 }
-
