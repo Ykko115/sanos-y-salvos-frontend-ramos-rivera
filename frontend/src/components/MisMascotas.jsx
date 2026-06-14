@@ -46,7 +46,7 @@ export default function MisMascotas() {
     setLoadingMascotas(true);
     setError('');
     try {
-      const response = await fetch(`/api/mascotas/usuario/${user.user.id}`);
+      const response = await fetch(`http://localhost:8080/api/mascotas/usuario/${user.user.id}`);
       if (!response.ok) {
         throw new Error('Error al cargar las mascotas');
       }
@@ -68,8 +68,11 @@ export default function MisMascotas() {
 
     setDeletingId(id);
     try {
-      const response = await fetch(`/api/mascotas/${id}`, {
+      const response = await fetch(`http://localhost:8080/api/mascotas/${id}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        }
       });
 
       if (!response.ok) {
@@ -140,8 +143,8 @@ export default function MisMascotas() {
               <div key={mascota.id} className="mascota-card">
                 <div className="mascota-header">
                   <h3>{mascota.nombre}</h3>
-                  <span className={`badge ${mascota.estado === 'REUNIDO' ? 'badge-encontrado' : `badge-${mascota.estado.toLowerCase()}`}`}>
-                    {mascota.estado === 'PERDIDO' ? 'Perdido' : 'Encontrado'}
+                  <span className={`badge badge-${mascota.estado.toLowerCase()}`}>
+                    {mascota.estado}
                   </span>
                 </div>
 

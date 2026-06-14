@@ -57,9 +57,12 @@ export default function Perfil() {
     setSuccess('');
 
     try {
-      const response = await fetch(`/api/usuario/${user.user.id}`, {
+      const response = await fetch(`http://localhost:8080/api/usuarios/${user.user.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
         body: JSON.stringify({
           nombre: editData.nombre.trim(),
           apellido: editData.apellido.trim(),
