@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAppContext } from '../context/AppContext';
 
 function normalizeReporte(raw) {
   if (!raw) return null;
@@ -17,6 +18,8 @@ function normalizeReporte(raw) {
 export function useMisReportes() {
   const [reportes, setReportes] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const { state } = useAppContext();
+  const { mascotasReunidas } = state;
 
   const { usuario, userId } = (() => {
     try {
@@ -28,20 +31,20 @@ export function useMisReportes() {
 
   useEffect(() => {
     if (!userId) { setCargando(false); setReportes([]); return; }
-    setCargando(true);
+    let activo = true;
 
-    // Fetch mascotas del usuario (para tener los nombres) y todos los reportes en paralelo
-    Promise.all([
-      fetch(`/api/usuario/${userId}/mascotas`)
-        .then((r) => (r.ok ? r.json() : {}))
-        .then((data) => (Array.isArray(data.mascotas) ? data.mascotas : Array.isArray(data) ? data : []))
+    // Fetch mascotas del usuario (nombre + estado actual) y todos los reportes en paralelo
+    const cargar = () => Promise.all([
+      fetch(`/api/mascotas/usuario/${userId}`)
+        .then((r) => (r.ok ? r.json() : []))
         .catch(() => []),
       fetch('/api/reportes')
         .then((r) => (r.ok ? r.json() : []))
         .catch(() => []),
     ])
       .then(([mascotas, allReportes]) => {
-        // Mapa id → mascota para búsqueda rápida
+        if (!activo) return;
+        // Mapa id → mascota con estado real (incluye REUNIDO)
         const mascotaMap = {};
         mascotas.forEach((m) => { if (m?.id != null) mascotaMap[String(m.id)] = m; });
 
@@ -58,6 +61,7 @@ export function useMisReportes() {
             if (!r.nombre || r.nombre === 'Sin nombre') r.nombre = mascota.nombre;
             if (!r.especie) r.especie = mascota.especie;
             if (!r.raza) r.raza = mascota.raza;
+            r._mascotaEstado = mascota.estado;
           }
         });
 
@@ -68,21 +72,33 @@ export function useMisReportes() {
           return fb - fa;
         });
 
-        // Deduplicar por mascotaId: conservar el reporte más reciente por mascota
+        // Deduplicar por mascotaId y excluir mascotas ya reunidas
         const vistos = new Set();
         const unicos = todos.filter((r) => {
+          if (r._mascotaEstado === 'REUNIDO') return false;
           const key = String(r.mascotaId ?? r.id);
           if (vistos.has(key)) return false;
           vistos.add(key);
           return true;
         });
 
-        setReportes(unicos);
-        setCargando(false);
+        if (activo) { setReportes(unicos); setCargando(false); }
       })
-      .catch(() => { setReportes([]); setCargando(false); });
+      .catch(() => { if (activo) { setReportes([]); setCargando(false); } });
+
+    setCargando(true);
+    cargar();
+    const interval = setInterval(cargar, 10000); // refrescar tras reuniones/eliminaciones
+    return () => { activo = false; clearInterval(interval); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
-  return { reportes, cargando, usuario };
+  // Filtro instantáneo: ocultar reportes de mascotas marcadas como reunidas
+  // en esta sesión, sin esperar al próximo poll.
+  const reunidasSet = new Set((mascotasReunidas || []).map(String));
+  const visibles = reportes.filter(
+    (r) => !reunidasSet.has(String(r.mascotaId ?? r.id))
+  );
+
+  return { reportes: visibles, cargando, usuario };
 }

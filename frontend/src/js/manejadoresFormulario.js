@@ -80,6 +80,9 @@ export const crearManejadorEnvioLogin = (
 
       const nombre = usuario.user?.nombre || usuario.nombre || 'Usuario';
       alCerrar(nombre);
+      // Recarga limpia para inicializar el estado/socket con el nuevo usuario
+      // y no arrastrar notificaciones del usuario anterior.
+      window.location.assign('/');
     } catch (error) {
       establecerErrores({ submit: error.message || 'Error al iniciar sesión. Intenta nuevamente.' });
     } finally {
@@ -140,6 +143,8 @@ export const crearManejadorEnvioRegistro = (
       localStorage.setItem('usuario', JSON.stringify(usuarioConExp));
 
       alCerrar();
+      // Recarga limpia para inicializar el estado/socket con el nuevo usuario.
+      window.location.assign('/');
     } catch (error) {
       establecerErrores({ submit: error.message || 'Error al registrarse. Intenta nuevamente.' });
     } finally {

@@ -1,10 +1,11 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Circle, Polyline, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Circle, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../css/MapaInteractivo.css';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
+import ModalReporte from './ModalReporte';
 
 // ── Constantes ────────────────────────────────────────────────────
 
@@ -20,11 +21,6 @@ function getEmoji(especie) {
   if (e === 'GATO')   return '🐈';
   if (e === 'ROEDOR') return '🐹';
   return '🐾';
-}
-
-function fmtEnum(v) {
-  if (!v) return '—';
-  return v.charAt(0).toUpperCase() + v.slice(1).toLowerCase().replace(/_/g, ' ');
 }
 
 // ── Iconos ────────────────────────────────────────────────────────
@@ -77,9 +73,10 @@ export default function MapaInteractivo() {
   const { state, dispatch } = useAppContext();
   const { coincidencias, mascotasReunidas } = state;
 
-  const [userLocation, setUserLocation] = useState(null);
-  const [mascotas,     setMascotas]     = useState([]);
-  const [geoError,     setGeoError]     = useState(null);
+  const [userLocation,    setUserLocation]    = useState(null);
+  const [mascotas,        setMascotas]        = useState([]);
+  const [geoError,        setGeoError]        = useState(null);
+  const [selectedMascota, setSelectedMascota] = useState(null);
   const mapRef = useRef();
 
   // Fetch reportes + mascotas y combina por mascotaId
@@ -102,8 +99,11 @@ export default function MapaInteractivo() {
             if (!raw) return null;
             const mascotaId = raw.mascotaId || raw.mascota_id;
             const m = mascotaById[String(mascotaId)] || null;
+            // Si la mascota ya fue reunida, usar ese estado para que el filtro la excluya
+            const estado = m?.estado === 'REUNIDO' ? 'REUNIDO' : (raw.estado || m?.estado || null);
             return {
               ...raw,
+              estado,
               id:      raw.id || raw.reporteId || null,
               ubicacion: raw.ubicacion || null,
               especie:   m?.especie   || raw.especie   || null,
@@ -153,7 +153,13 @@ export default function MapaInteractivo() {
   };
 
   const coordenadasCentro = userLocation || [-33.5167, -70.7617];
-  const visibles = mascotas.filter(m => String(m.estado || '').toUpperCase() !== 'REUNIDO');
+  const reunidasSet = new Set((mascotasReunidas || []).map(String));
+  const visibles = mascotas.filter(m =>
+    String(m.estado || '').toUpperCase() !== 'REUNIDO' &&
+    !reunidasSet.has(String(m.id)) &&
+    !reunidasSet.has(String(m.mascotaId ?? m.mascota_id)) &&
+    !reunidasSet.has(String(m.mascota?.id))
+  );
 
   return (
     <div className="mapa-container">
@@ -196,23 +202,10 @@ export default function MapaInteractivo() {
           const tieneCoincidencia = esPerdida || esEncontrada;
 
           const estadoColor = ESTADO_COLOR[estado] || '#e24b4a';
-          const emoji  = getEmoji(mascota.especie);
           const icon   = tieneCoincidencia
             ? createPulsingIcon(esPerdida ? 'perdida' : 'encontrada')
             : createPetIcon(mascota.especie, estado);
 
-          // Popup content
-          const nombre   = mascota.nombre   || 'Sin nombre';
-          const raza     = mascota.raza     ? fmtEnum(mascota.raza)   : '—';
-          const especieFmt = fmtEnum(mascota.especie) || '—';
-          const colorFmt   = mascota.color  ? fmtEnum(mascota.color)  : '—';
-          const tamanoFmt  = mascota.tamano ? fmtEnum(mascota.tamano) : '—';
-          const senasFmt   = Array.isArray(mascota.senas) && mascota.senas.length
-            ? mascota.senas.map(s => fmtEnum(s)).join(', ')
-            : '—';
-          const fecha     = mascota.fechaReporte || mascota.fecha_reporte || '—';
-          const telefono  = mascota.telefono ? String(mascota.telefono) : '—';
-          const fotoUrl   = mascota.fotoUrl || '';
 
           return (
             <Fragment key={mascota.id}>
@@ -229,50 +222,17 @@ export default function MapaInteractivo() {
                 }}
               />
 
-              {/* Pin con popup */}
+              {/* Pin — abre ModalReporte al hacer click */}
               <Marker
                 position={pos}
                 icon={icon}
-                eventHandlers={tieneCoincidencia ? { click: abrirSidebar } : {}}
-              >
-                <Popup minWidth={210} maxWidth={260}>
-                  <div style={{ fontFamily: 'Arial, sans-serif', padding: '2px 0' }}>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: estadoColor, marginBottom: 6 }}>
-                      {emoji} {nombre}
-                    </div>
-                    {fotoUrl && (
-                      <img
-                        src={fotoUrl}
-                        alt={nombre}
-                        style={{ width: '100%', borderRadius: 6, marginBottom: 6, maxHeight: 120, objectFit: 'cover' }}
-                        onError={e => { e.target.style.display = 'none'; }}
-                      />
-                    )}
-                    <div style={{ fontSize: 12, color: '#374151', lineHeight: '1.75' }}>
-                      <b>Especie:</b> {especieFmt}<br />
-                      <b>Raza:</b> {raza}<br />
-                      <b>Color:</b> {colorFmt}<br />
-                      <b>Tamaño:</b> {tamanoFmt}<br />
-                      {senasFmt !== '—' && <><b>Señas:</b> {senasFmt}<br /></>}
-                      <b>Fecha:</b> {fecha}<br />
-                      <b>Contacto:</b> {telefono}
-                    </div>
-                    {tieneCoincidencia && (
-                      <button
-                        onClick={abrirSidebar}
-                        style={{
-                          marginTop: 8, width: '100%',
-                          background: '#2d8a4e', color: 'white',
-                          border: 'none', borderRadius: 6,
-                          padding: '6px 0', fontSize: 12, cursor: 'pointer',
-                        }}
-                      >
-                        Ver coincidencias
-                      </button>
-                    )}
-                  </div>
-                </Popup>
-              </Marker>
+                eventHandlers={{
+                  click: () => {
+                    if (tieneCoincidencia) abrirSidebar();
+                    setSelectedMascota(mascota);
+                  },
+                }}
+              />
             </Fragment>
           );
         })}
@@ -306,6 +266,12 @@ export default function MapaInteractivo() {
           )}
         </p>
       </div>
+
+      <ModalReporte
+        open={!!selectedMascota}
+        onClose={() => setSelectedMascota(null)}
+        mascota={selectedMascota}
+      />
     </div>
   );
 }

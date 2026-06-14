@@ -1,41 +1,13 @@
 import '../css/Home.css';
 import { Link, useLocation } from 'react-router-dom';
 import MapaInteractivo from './MapaInteractivo';
-import SidebarPanel from './Sidebar/SidebarPanel';
-import { useAppContext } from '../context/AppContext';
-import { useCoincidencias } from '../hooks/useCoincidencias';
-
-function BtnSidebar() {
-  const { state, dispatch } = useAppContext();
-  const noLeidas = state.notificaciones.filter((n) => !n.leida).length;
-  const coincidencias = state.coincidencias.length;
-  const total = noLeidas + coincidencias;
-
-  const abrir = () => {
-    dispatch({ type: 'ABRIR_SIDEBAR' });
-    dispatch({ type: 'SET_TAB', payload: noLeidas > 0 ? 'notif' : 'coincidencias' });
-  };
-
-  return (
-    <button className="btn-sidebar-toggle" onClick={abrir}>
-      🔔 Panel
-      {total > 0 && <span className="btn-sidebar-badge">{total}</span>}
-    </button>
-  );
-}
-
-function MapaConSidebar() {
-  useCoincidencias();
-  return (
-    <>
-      <MapaInteractivo />
-      <SidebarPanel />
-    </>
-  );
-}
 
 export default function Home() {
   const location = useLocation();
+  const isLoggedIn = (() => {
+    try { return !!JSON.parse(localStorage.getItem('usuario') || 'null')?.user; }
+    catch { return false; }
+  })();
 
   return (
     <main className="home">
@@ -60,8 +32,7 @@ export default function Home() {
 
       <section className="mapa-section">
         <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginBottom: '1rem' }}>
-            <BtnSidebar />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
             <Link
               to="/nuevo-reporte"
               state={{ backgroundLocation: location }}
@@ -70,26 +41,28 @@ export default function Home() {
               Nuevo Reporte
             </Link>
           </div>
-          <MapaConSidebar />
+          <MapaInteractivo />
         </div>
       </section>
 
-      <section className="cta-section">
-        <div className="cta-content">
-          <h2>¿Tienes una Mascota Perdida?</h2>
-          <p>
-            No esperes más. Crea una cuenta y reporta tu mascota ahora mismo.
-            Cada minuto cuenta.
-          </p>
-          <Link
-            to="/registro"
-            state={{ backgroundLocation: location }}
-            className="btn btn-primary-large"
-          >
-            Comenzar Ahora
-          </Link>
-        </div>
-      </section>
+      {!isLoggedIn && (
+        <section className="cta-section">
+          <div className="cta-content">
+            <h2>¿Tienes una Mascota Perdida?</h2>
+            <p>
+              No esperes más. Crea una cuenta y reporta tu mascota ahora mismo.
+              Cada minuto cuenta.
+            </p>
+            <Link
+              to="/registro"
+              state={{ backgroundLocation: location }}
+              className="btn btn-primary-large"
+            >
+              Comenzar Ahora
+            </Link>
+          </div>
+        </section>
+      )}
     </main>
   );
 }
