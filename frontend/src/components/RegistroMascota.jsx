@@ -1,180 +1,120 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { COLORES, TAMANOS, PELAJES, RANGOS_EDAD, SENAS } from "../constants/enums";
 import "../css/RegistroMascota.css";
 
-export default function RegistroMascota({ open, onClose }) {
-  const [formData, setFormData] = useState({
-    nombre: "",
-    raza: "",
-    edad: "",
-    descripcion: "",
-    especie: "PERRO",
-    estado: "PERDIDO",
-    nombreUsuario: "",
-  });
+function ColorCirculo({ clave, activo, onClick }) {
+  const { label, hex } = COLORES[clave];
+  return (
+    <button
+      type="button"
+      title={label}
+      className={`rm-color-btn ${activo ? "activo" : ""}`}
+      style={{
+        background: hex || "#e5e7eb",
+        border: hex === "#f5f5f0" ? "1px solid #d1d5db" : undefined,
+      }}
+      onClick={() => onClick(clave)}
+    >
+      {!hex && "?"}
+    </button>
+  );
+}
 
-  const [usuario, setUsuario] = useState(null);
-  const [usuarioId, setUsuarioId] = useState("");
+const INIT = {
+  nombre: "", especie: "PERRO", raza: "", edad: "",
+  color: "", tamano: "", pelaje: "", rangoEdad: "", senas: [],
+  descripcion: "", fotoUrl: "", estado: "PERDIDO",
+};
+
+export default function RegistroMascota({ open, onClose }) {
+  const [form, setForm] = useState(INIT);
+  const [usuarioId, setUsuarioId] = useState(null);
   const [mensaje, setMensaje] = useState("");
-  const [mensajeTipo, setMensajeTipo] = useState(""); // 'success' | 'error'
+  const [mensajeTipo, setMensajeTipo] = useState("");
   const [cargando, setCargando] = useState(false);
   const [errores, setErrores] = useState({});
+  const [preview, setPreview] = useState("");
+  const fileRef = useRef();
 
-  // Cargar usuario desde localStorage
   useEffect(() => {
-    const cargarUsuario = () => {
-      const usuarioGuardado = localStorage.getItem("usuario");
-      if (usuarioGuardado) {
-        try {
-          const usuarioLS = JSON.parse(usuarioGuardado);
-          // Verificar expiración del token
-          if (usuarioLS.exp && Date.now() / 1000 > usuarioLS.exp) {
-            localStorage.removeItem("usuario");
-            setUsuario(null);
-            setUsuarioId("");
-          } else if (usuarioLS.user && usuarioLS.user.id) {
-            setUsuario(usuarioLS.user);
-            setUsuarioId(usuarioLS.user.id);
-          } else {
-            setUsuario(null);
-            setUsuarioId("");
-          }
-        } catch {
-          setUsuario(null);
-          setUsuarioId("");
+    const cargar = () => {
+      const raw = localStorage.getItem("usuario");
+      if (!raw) { setUsuarioId(null); return; }
+      try {
+        const u = JSON.parse(raw);
+        if (u.exp && Date.now() / 1000 > u.exp) {
+          localStorage.removeItem("usuario");
+          setUsuarioId(null);
+        } else if (u.user?.id) {
+          setUsuarioId(u.user.id);
         }
-      } else {
-        setUsuario(null);
-        setUsuarioId("");
-      }
+      } catch { setUsuarioId(null); }
     };
-
-    cargarUsuario();
-    window.addEventListener("storage", cargarUsuario);
-    const interval = setInterval(cargarUsuario, 1000);
-    return () => {
-      window.removeEventListener("storage", cargarUsuario);
-      clearInterval(interval);
-    };
+    cargar();
+    window.addEventListener("storage", cargar);
+    const t = setInterval(cargar, 1000);
+    return () => { window.removeEventListener("storage", cargar); clearInterval(t); };
   }, [open]);
 
-  // Validar formulario
-  const validarFormulario = () => {
-    const nuevosErrores = {};
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-    if (!formData.nombre.trim()) {
-      nuevosErrores.nombre = "El nombre de la mascota es requerido";
-    }
-
-    if (!formData.nombreUsuario.trim()) {
-      nuevosErrores.nombreUsuario = "Tu nombre es requerido";
-    }
-
-    if (!formData.raza.trim()) {
-      nuevosErrores.raza = "La raza es requerida";
-    }
-
-    if (!formData.edad || formData.edad < 0) {
-      nuevosErrores.edad = "La edad debe ser un número válido";
-    }
-
-    if (!formData.descripcion.trim()) {
-      nuevosErrores.descripcion = "La descripción es requerida";
-    }
-
-    if (!formData.especie) {
-      nuevosErrores.especie = "La especie es requerida";
-    }
-
-    if (!formData.estado) {
-      nuevosErrores.estado = "El estado es requerido";
-    }
-
-    setErrores(nuevosErrores);
-    return Object.keys(nuevosErrores).length === 0;
-  };
-
-  // Manejar cambios en el formulario
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "edad" ? parseInt(value) || "" : value,
+  const toggleSena = (s) =>
+    setForm(f => ({
+      ...f,
+      senas: f.senas.includes(s) ? f.senas.filter(x => x !== s) : [...f.senas, s],
     }));
-    // Limpiar errores cuando el usuario empieza a escribir
-    if (errores[name]) {
-      setErrores((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
+
+  const handleFoto = (e) => {
+    const file = e.target.files[0];
+    if (!file) { setPreview(""); set("fotoUrl", ""); return; }
+    const reader = new FileReader();
+    reader.onload = ev => { setPreview(ev.target.result); set("fotoUrl", ev.target.result); };
+    reader.readAsDataURL(file);
   };
 
-  // Enviar formulario
+  const validar = () => {
+    const errs = {};
+    if (!form.nombre.trim()) errs.nombre = "El nombre es obligatorio.";
+    if (!form.especie) errs.especie = "La especie es obligatoria.";
+    setErrores(errs);
+    return Object.keys(errs).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validarFormulario()) {
-      return;
-    }
-
+    if (!validar()) return;
     setCargando(true);
-    setMensaje("");
-    setMensajeTipo("");
-
+    setMensaje(""); setMensajeTipo("");
     try {
-      const datosEnvio = {
-        nombre: formData.nombre.trim(),
-        raza: formData.raza.trim(),
-        edad: parseInt(formData.edad),
-        descripcion: formData.descripcion.trim(),
-        especie: formData.especie,
-        estado: formData.estado,
-        nombreUsuario: formData.nombreUsuario.trim(),
-        usuarioId: usuarioId || null,
+      const payload = {
+        nombre: form.nombre.trim(),
+        especie: form.especie,
+        raza: form.raza || null,
+        edad: form.edad ? Number(form.edad) : null,
+        descripcion: form.descripcion || null,
+        color: form.color || null,
+        tamano: form.tamano || null,
+        pelaje: form.pelaje || null,
+        rangoEdad: form.rangoEdad || null,
+        senas: form.senas.length ? form.senas : null,
+        fotoUrl: form.fotoUrl || null,
+        estado: form.estado,
+        usuarioId: usuarioId,
       };
-
-      console.log("Enviando datos:", datosEnvio);
-
-      const respuesta = await fetch("http://localhost:8080/api/mascotas", {
+      const res = await fetch("/api/mascotas", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(datosEnvio),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-
-      if (!respuesta.ok) {
-        const errorData = await respuesta.json().catch(() => ({}));
-        throw new Error(
-          errorData.message || "Error al registrar la mascota"
-        );
-      }
-
-      const mascotaCreada = await respuesta.json();
-      console.log("Mascota registrada:", mascotaCreada);
-
-      setMensaje("¡Mascota registrada exitosamente!");
+      if (!res.ok) throw new Error("Error al registrar la mascota.");
+      setMensaje("Mascota registrada exitosamente!");
       setMensajeTipo("success");
-
-      // Limpiar formulario
-      setFormData({
-        nombre: "",
-        raza: "",
-        edad: "",
-        descripcion: "",
-        especie: "PERRO",
-        estado: "PERDIDO",
-        nombreUsuario: "",
-      });
-
-      // Cerrar modal después de 2 segundos
-      setTimeout(() => {
-        onClose();
-      }, 2000);
-    } catch (error) {
-      console.error("Error:", error);
-      setMensaje(error.message || "Error al registrar la mascota");
+      setForm(INIT);
+      setPreview("");
+      setTimeout(onClose, 2000);
+    } catch (err) {
+      setMensaje(err.message);
       setMensajeTipo("error");
     } finally {
       setCargando(false);
@@ -185,170 +125,188 @@ export default function RegistroMascota({ open, onClose }) {
 
   return createPortal(
     <div className="modal-mascota-overlay" onClick={onClose}>
-      <div className="modal-mascota" onClick={(e) => e.stopPropagation()}>
-        <button className="close-btn" onClick={onClose}>
-          ✕
-        </button>
+      <div className="modal-mascota" onClick={e => e.stopPropagation()}>
+        <button className="close-btn" onClick={onClose}>x</button>
 
         <div className="modal-mascota-header">
-          <h2>🐾 Registrar Mascota</h2>
-          <p>Comparte información sobre tu mascota para ayudarnos a encontrarla</p>
+          <h2>Registrar Mascota</h2>
+          <p>Agrega los datos de tu mascota para tenerla en el sistema</p>
         </div>
 
         <form onSubmit={handleSubmit} className="mascota-form">
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="nombreUsuario">Tu Nombre *</label>
-              <input
-                type="text"
-                id="nombreUsuario"
-                name="nombreUsuario"
-                value={formData.nombreUsuario}
-                onChange={handleChange}
-                placeholder="Tu nombre"
-                className={errores.nombreUsuario ? "input-error" : ""}
-              />
-              {errores.nombreUsuario && (
-                <span className="error-text">{errores.nombreUsuario}</span>
-              )}
-            </div>
-          </div>
 
+          {/* Nombre + Especie */}
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="nombre">Nombre de la Mascota *</label>
+              <label>Nombre *</label>
               <input
-                type="text"
-                id="nombre"
-                name="nombre"
-                value={formData.nombre}
-                onChange={handleChange}
-                placeholder="Ej: Max, Luna, Pelusa"
+                value={form.nombre}
+                onChange={e => set("nombre", e.target.value)}
+                placeholder="Ej: Toby"
                 className={errores.nombre ? "input-error" : ""}
               />
-              {errores.nombre && (
-                <span className="error-text">{errores.nombre}</span>
-              )}
+              {errores.nombre && <span className="error-text">{errores.nombre}</span>}
             </div>
-
             <div className="form-group">
-              <label htmlFor="especie">Especie *</label>
+              <label>Especie *</label>
               <select
-                id="especie"
-                name="especie"
-                value={formData.especie}
-                onChange={handleChange}
+                value={form.especie}
+                onChange={e => set("especie", e.target.value)}
                 className={errores.especie ? "input-error" : ""}
               >
-                <option value="PERRO">🐕 Perro</option>
-                <option value="GATO">🐈 Gato</option>
-                <option value="HURON">🦝 Hurón</option>
-                <option value="ROEDOR">🐭 Roedor</option>
-                <option value="OTRO">🐾 Otro</option>
+                <option value="">Selecciona...</option>
+                <option value="PERRO">Perro</option>
+                <option value="GATO">Gato</option>
+                <option value="HURON">Huron</option>
+                <option value="ROEDOR">Roedor</option>
+                <option value="OTRO">Otro</option>
               </select>
-              {errores.especie && (
-                <span className="error-text">{errores.especie}</span>
-              )}
+              {errores.especie && <span className="error-text">{errores.especie}</span>}
             </div>
           </div>
 
+          {/* Raza + Edad */}
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="raza">Raza *</label>
+              <label>Raza</label>
               <input
-                type="text"
-                id="raza"
-                name="raza"
-                value={formData.raza}
-                onChange={handleChange}
-                placeholder="Ej: Labrador, Siamés, Mixto"
-                className={errores.raza ? "input-error" : ""}
+                value={form.raza}
+                onChange={e => set("raza", e.target.value)}
+                placeholder="Ej: Labrador, Siames..."
               />
-              {errores.raza && (
-                <span className="error-text">{errores.raza}</span>
-              )}
             </div>
-
             <div className="form-group">
-              <label htmlFor="edad">Edad (años) *</label>
+              <label>Edad (años)</label>
               <input
-                type="number"
-                id="edad"
-                name="edad"
-                min="0"
-                max="50"
-                value={formData.edad}
-                onChange={handleChange}
-                placeholder="Ej: 2, 5, 10"
-                className={errores.edad ? "input-error" : ""}
+                type="number" min="0" max="30"
+                value={form.edad}
+                onChange={e => set("edad", e.target.value)}
+                placeholder="Ej: 3"
               />
-              {errores.edad && (
-                <span className="error-text">{errores.edad}</span>
-              )}
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="estado">Estado *</label>
-              <select
-                id="estado"
-                name="estado"
-                value={formData.estado}
-                onChange={handleChange}
-                className={errores.estado ? "input-error" : ""}
-              >
-                <option value="PERDIDO">❌ Perdido</option>
-                <option value="ENCONTRADO">✅ Encontrado</option>
-              </select>
-              {errores.estado && (
-                <span className="error-text">{errores.estado}</span>
-              )}
-            </div>
-          </div>
-
+          {/* Color */}
           <div className="form-group">
-            <label htmlFor="descripcion">Descripción *</label>
-            <textarea
-              id="descripcion"
-              name="descripcion"
-              value={formData.descripcion}
-              onChange={handleChange}
-              placeholder="Describe características, ubicación donde se perdió/encontró, collar, etc."
-              rows="4"
-              className={errores.descripcion ? "input-error" : ""}
-            />
-            {errores.descripcion && (
-              <span className="error-text">{errores.descripcion}</span>
+            <label>Color</label>
+            <div className="rm-paleta">
+              {Object.keys(COLORES).map(k => (
+                <ColorCirculo
+                  key={k} clave={k} activo={form.color === k}
+                  onClick={v => set("color", form.color === v ? "" : v)}
+                />
+              ))}
+            </div>
+            {form.color && (
+              <span className="rm-seleccion">Color: {COLORES[form.color].label}</span>
             )}
           </div>
 
-          {mensaje && (
-            <div className={`mensaje ${mensajeTipo}`}>
-              {mensajeTipo === "success" && "✓ "}
-              {mensajeTipo === "error" && "✗ "}
-              {mensaje}
+          {/* Tamano */}
+          <div className="form-group">
+            <label>Tamano</label>
+            <div className="rm-btn-group">
+              {Object.entries(TAMANOS).map(([k, v]) => (
+                <button key={k} type="button"
+                  className={`rm-btn-sel ${form.tamano === k ? "activo" : ""}`}
+                  onClick={() => set("tamano", form.tamano === k ? "" : k)}>
+                  {v}
+                </button>
+              ))}
             </div>
+          </div>
+
+          {/* Pelaje */}
+          <div className="form-group">
+            <label>Pelaje</label>
+            <div className="rm-btn-group">
+              {Object.entries(PELAJES).map(([k, v]) => (
+                <button key={k} type="button"
+                  className={`rm-btn-sel ${form.pelaje === k ? "activo" : ""}`}
+                  onClick={() => set("pelaje", form.pelaje === k ? "" : k)}>
+                  {v}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Rango de edad */}
+          <div className="form-group">
+            <label>Rango de edad</label>
+            <div className="rm-btn-group">
+              {Object.entries(RANGOS_EDAD).filter(([k]) => k !== "NO_SE").map(([k, v]) => (
+                <button key={k} type="button"
+                  className={`rm-btn-sel ${form.rangoEdad === k ? "activo" : ""}`}
+                  onClick={() => set("rangoEdad", form.rangoEdad === k ? "" : k)}>
+                  {v}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Caracteristicas particulares */}
+          <div className="form-group">
+            <label>Caracteristicas particulares</label>
+            <div className="rm-senas-grid">
+              {Object.entries(SENAS).filter(([k]) => k !== "MUY_SOCIABLE").map(([k, v]) => (
+                <label key={k} className="rm-sena-item">
+                  <input
+                    type="checkbox"
+                    checked={form.senas.includes(k)}
+                    onChange={() => toggleSena(k)}
+                  />
+                  {v}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Descripcion */}
+          <div className="form-group">
+            <label>Descripcion</label>
+            <textarea
+              value={form.descripcion}
+              onChange={e => set("descripcion", e.target.value)}
+              placeholder="Caracteristicas adicionales, collar, microchip..."
+              rows="3"
+            />
+          </div>
+
+          {/* Foto */}
+          <div className="form-group">
+            <label>Foto de la mascota</label>
+            <input
+              type="file" accept="image/*"
+              ref={fileRef} onChange={handleFoto}
+            />
+            {preview && (
+              <img src={preview} alt="preview" className="rm-foto-preview" />
+            )}
+          </div>
+
+          {/* Estado */}
+          <div className="form-group">
+            <label>Estado</label>
+            <select value={form.estado} onChange={e => set("estado", e.target.value)}>
+              <option value="PERDIDO">Perdido</option>
+              <option value="ENCONTRADO">Encontrado</option>
+              <option value="REUNIDO">Reunido</option>
+            </select>
+          </div>
+
+          {mensaje && (
+            <div className={`mensaje ${mensajeTipo}`}>{mensaje}</div>
           )}
 
           <div className="form-buttons">
-            <button
-              type="submit"
-              className="btn-submit"
-              disabled={cargando}
-            >
+            <button type="submit" className="btn-submit" disabled={cargando}>
               {cargando ? "Registrando..." : "Registrar Mascota"}
             </button>
-            <button
-              type="button"
-              className="btn-cancel"
-              onClick={onClose}
-              disabled={cargando}
-            >
+            <button type="button" className="btn-cancel" onClick={onClose} disabled={cargando}>
               Cancelar
             </button>
           </div>
-          </form>
+        </form>
       </div>
     </div>,
     document.body
