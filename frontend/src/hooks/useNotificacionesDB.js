@@ -17,11 +17,20 @@ export function useNotificacionesDB() {
       }
     };
 
+    const obtenerToken = () => {
+      try {
+        const parsed = JSON.parse(localStorage.getItem('usuario') || 'null');
+        return parsed?.token ?? null;
+      } catch { return null; }
+    };
+
     const poll = async () => {
       const usuarioId = obtenerUsuarioId();
       if (!usuarioId) return;
+      const token = obtenerToken();
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
       try {
-        const res = await fetch(`/api/mascotas/notificaciones/${usuarioId}`);
+        const res = await fetch(`/api/mascotas/notificaciones/${usuarioId}`, { headers });
         if (!res.ok) return;
         const notifs = await res.json();
         // Una notif por mascota encontrada (candidata) — la de mayor porcentaje

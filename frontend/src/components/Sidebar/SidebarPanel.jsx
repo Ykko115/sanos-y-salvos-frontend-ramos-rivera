@@ -1,14 +1,12 @@
 import { useAppContext } from '../../context/AppContext';
 import TabNotificaciones from './TabNotificaciones';
 import TabCoincidencias from './TabCoincidencias';
-import TabReporte from './TabReporte';
 import TabMisReportes from './TabMisReportes';
 import '../../css/Sidebar.css';
 
 const TABS = [
   { id: 'notif',        label: 'Notificaciones', contador: (s) => s.notificaciones.filter((n) => !n.leida).length },
   { id: 'coincidencias',label: 'Coincidencias',  contador: (s) => s.coincidencias.length },
-  { id: 'reporte',      label: 'Estadisticas',   contador: () => 0 },
   { id: 'mis-reportes', label: 'Mis Reportes',   contador: () => 0 },
 ];
 
@@ -54,7 +52,6 @@ export default function SidebarPanel() {
         <div className="sidebar-contenido">
           {tabActivo === 'notif'         && <TabNotificaciones />}
           {tabActivo === 'coincidencias' && <TabCoincidencias />}
-          {tabActivo === 'reporte'       && <TabReporte />}
           {tabActivo === 'mis-reportes'  && <TabMisReportes />}
         </div>
       </aside>
