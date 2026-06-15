@@ -5,7 +5,6 @@ import { useCoincidencias } from '../hooks/useCoincidencias';
 import { useNotificacionesDB } from '../hooks/useNotificacionesDB';
 import TabNotificaciones from './Sidebar/TabNotificaciones';
 import TabCoincidencias from './Sidebar/TabCoincidencias';
-import TabReporte from './Sidebar/TabReporte';
 import TabMisReportes from './Sidebar/TabMisReportes';
 import { getToken } from '../js/auth';
 import '../css/Navbar.css';
@@ -14,7 +13,6 @@ import '../css/Sidebar.css';
 const PANEL_TABS = [
   { id: 'notif',         label: 'Notificaciones', contador: (s) => s.notificaciones.filter((n) => !n.leida).length },
   { id: 'coincidencias', label: 'Coincidencias',  contador: (s) => s.coincidencias.length },
-  { id: 'reporte',       label: 'Estadísticas',   contador: () => 0 },
   { id: 'mis-reportes',  label: 'Mis Reportes',   contador: () => 0 },
 ];
 
@@ -72,7 +70,6 @@ function NavPanel() {
           <div className="nav-panel-contenido">
             {state.tabActivo === 'notif'         && <TabNotificaciones />}
             {state.tabActivo === 'coincidencias' && <TabCoincidencias />}
-            {state.tabActivo === 'reporte'       && <TabReporte />}
             {state.tabActivo === 'mis-reportes'  && <TabMisReportes />}
           </div>
         </div>
@@ -157,6 +154,29 @@ export default function Navbar() {
     // usuario vea notificaciones que no son suyas.
     window.location.assign('/');
   };
+
+  // Cierre de sesión automático al expirar el JWT
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const sesion = JSON.parse(localStorage.getItem('usuario') || 'null');
+      const token = sesion?.token || sesion?.accessToken;
+      if (!token) return;
+      const { exp } = JSON.parse(atob(token.split('.')[1]));
+      if (!exp) return;
+      const restante = exp * 1000 - Date.now();
+      if (restante <= 0) {
+        localStorage.removeItem('usuario');
+        window.location.assign('/');
+        return;
+      }
+      const timer = setTimeout(() => {
+        localStorage.removeItem('usuario');
+        window.location.assign('/');
+      }, restante);
+      return () => clearTimeout(timer);
+    } catch { /* JWT malformado, no hacer nada */ }
+  }, [user]);
   const handleNavigatePerfil = () => {
     setMenuOpen(false);
     setDropdownUserOpen(false);
