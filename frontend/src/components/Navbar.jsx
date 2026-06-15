@@ -5,7 +5,6 @@ import { useCoincidencias } from '../hooks/useCoincidencias';
 import { useNotificacionesDB } from '../hooks/useNotificacionesDB';
 import TabNotificaciones from './Sidebar/TabNotificaciones';
 import TabCoincidencias from './Sidebar/TabCoincidencias';
-import TabReporte from './Sidebar/TabReporte';
 import TabMisReportes from './Sidebar/TabMisReportes';
 import { getToken } from '../js/auth';
 import '../css/Navbar.css';
@@ -14,7 +13,6 @@ import '../css/Sidebar.css';
 const PANEL_TABS = [
   { id: 'notif',         label: 'Notificaciones', contador: (s) => s.notificaciones.filter((n) => !n.leida).length },
   { id: 'coincidencias', label: 'Coincidencias',  contador: (s) => s.coincidencias.length },
-  { id: 'reporte',       label: 'Estadísticas',   contador: () => 0 },
   { id: 'mis-reportes',  label: 'Mis Reportes',   contador: () => 0 },
 ];
 
@@ -72,7 +70,6 @@ function NavPanel() {
           <div className="nav-panel-contenido">
             {state.tabActivo === 'notif'         && <TabNotificaciones />}
             {state.tabActivo === 'coincidencias' && <TabCoincidencias />}
-            {state.tabActivo === 'reporte'       && <TabReporte />}
             {state.tabActivo === 'mis-reportes'  && <TabMisReportes />}
           </div>
         </div>
@@ -94,27 +91,33 @@ export default function Navbar() {
   useNotificacionesDB();
 
   useEffect(() => {
+    // rawRef evita setState con objeto nuevo cada segundo (prevenía que el
+    // useEffect de auto-logout se recicle y cancele el timer en cada tick).
+    const rawRef = { current: null };
+    // loggedInRef detecta la transición logueado→expirado para redirigir.
+    const loggedInRef = { current: false };
+
     const cargarUsuario = () => {
-      // getToken() decodifica el JWT, elimina localStorage si expiró y retorna null
-      const token = getToken();
+      const token = getToken(); // elimina localStorage si el JWT expiró
       if (!token) {
-        setUser(null);
+        if (loggedInRef.current) {
+          // Tenía sesión activa y el token acaba de expirar → redirigir
+          loggedInRef.current = false;
+          rawRef.current = null;
+          setUser(null);
+          window.location.assign('/');
+        }
         return;
       }
-      const usuarioGuardado = localStorage.getItem('usuario');
-      if (usuarioGuardado) {
-        try {
-          const usuario = JSON.parse(usuarioGuardado);
-          if (usuario.exp && Date.now() / 1000 > usuario.exp) {
-            localStorage.removeItem('usuario');
-            setUser(null);
-          } else {
-            setUser(usuario);
-          }
-        } catch {
-          setUser(null);
-        }
-      } else {
+      const raw = localStorage.getItem('usuario');
+      if (raw === rawRef.current) return; // sin cambios, evitar re-render
+      rawRef.current = raw;
+      try {
+        const usuario = JSON.parse(raw);
+        loggedInRef.current = true;
+        setUser(usuario);
+      } catch {
+        loggedInRef.current = false;
         setUser(null);
       }
     };
@@ -153,8 +156,7 @@ export default function Navbar() {
     setMenuOpen(false);
     setDropdownUserOpen(false);
     // Recarga limpia: resetea notificaciones/coincidencias del estado y saca
-    // al socket de la sala del usuario anterior. Evita que el siguiente
-    // usuario vea notificaciones que no son suyas.
+    // al socket de la sala del usuario anterior.
     window.location.assign('/');
   };
   const handleNavigatePerfil = () => {

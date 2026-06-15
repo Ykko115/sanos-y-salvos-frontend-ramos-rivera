@@ -25,7 +25,7 @@ export default function Registro() {
     establecerErrores,
     establecerCargando,
     validarFormularioRegistro,
-    () => navigate('/')
+    () => window.location.replace('/')
   );
 
   return (

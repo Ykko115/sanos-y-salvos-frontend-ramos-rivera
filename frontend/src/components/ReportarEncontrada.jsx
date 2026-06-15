@@ -187,6 +187,24 @@ export default function ReportarEncontrada({ onClose, onExito }) {
       const created = await res.json();
       const mascotaId = created.id;
 
+      // Crear reporte en el servicio de reportes (para mapa y motor de coincidencias)
+      const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+      const token = usuario?.token ?? null;
+      fetch('/api/reportes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          mascotaId,
+          usuarioId: usuario?.user?.id ?? usuario?.id ?? null,
+          descripcion: form.descripcion || null,
+          estado: 'ENCONTRADO',
+          ubicacion: coordenadas ? { latitude: coordenadas[0], longitude: coordenadas[1] } : null,
+        }),
+      }).catch(() => {});
+
       // Avisar al servidor Socket.io para que re-calcule coincidencias
       fetch('/api/notificar/nuevo-reporte', {
         method: 'POST',
