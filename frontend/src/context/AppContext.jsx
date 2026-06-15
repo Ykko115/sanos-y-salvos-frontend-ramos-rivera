@@ -20,10 +20,8 @@ function reducer(state, action) {
     case 'SET_COINCIDENCIAS':
       return { ...state, coincidencias: action.payload };
 
-    case 'ADD_NOTIFICACION': {
-      if (state.notificaciones.some(n => n.id === action.payload.id)) return state;
+    case 'ADD_NOTIFICACION':
       return { ...state, notificaciones: [action.payload, ...state.notificaciones].slice(0, 50) };
-    }
 
     case 'MARCAR_LEIDA':
       return {
@@ -54,22 +52,14 @@ function reducer(state, action) {
         coincidencias: state.coincidencias.filter((c) => c.id !== action.payload),
       };
 
-    case 'QUITAR_NOTIFICACION':
-      return {
-        ...state,
-        notificaciones: state.notificaciones.filter((n) => n.id !== action.payload),
-      };
-
     case 'MASCOTA_REUNIDA':
       return {
         ...state,
         mascotasReunidas: [...state.mascotasReunidas, String(action.payload)],
         coincidencias: state.coincidencias.filter(
           (c) =>
-            String(c.mascota_perdida.id)           !== String(action.payload) &&
-            String(c.mascota_perdida.mascotaId)    !== String(action.payload) &&
-            String(c.mascota_encontrada.id)        !== String(action.payload) &&
-            String(c.mascota_encontrada.mascotaId) !== String(action.payload)
+            String(c.mascota_perdida.id) !== String(action.payload) &&
+            String(c.mascota_encontrada.id) !== String(action.payload)
         ),
       };
 

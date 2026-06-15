@@ -3,7 +3,6 @@ import { MapContainer, TileLayer, Marker, Circle, useMapEvents, useMap } from 'r
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { ESPECIES, COLORES, TAMANOS, PELAJES, RANGOS_EDAD, SENAS } from '../constants/enums';
-import { useAppContext } from '../context/AppContext';
 
 // Pin de clic — círculo verde para marcar donde se encontró la mascota
 const pinIcon = L.divIcon({
@@ -49,7 +48,6 @@ function ColorCirculo({ clave, activo, onClick }) {
 }
 
 export default function ReportarEncontrada({ onClose, onExito }) {
-  const { dispatch } = useAppContext();
   const [form, setForm] = useState(INIT);
   const [preview, setPreview] = useState('');
   const [analizando, setAnalizando] = useState(false);
@@ -73,77 +71,38 @@ export default function ReportarEncontrada({ onClose, onExito }) {
   const toggleSena = (s) =>
     setForm(f => ({ ...f, senas: f.senas.includes(s) ? f.senas.filter(x => x !== s) : [...f.senas, s] }));
 
-  // Redimensiona la imagen a un base64 liviano (máx 800px, JPEG q=0.8).
-  // R2 está caído (credenciales Unauthorized), así que guardamos la foto
-  // como data URL directamente en la mascota — siempre se ve, nunca falla.
-  const fileABase64Liviano = (file) => new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const img = new Image();
-      img.onload = () => {
-        const MAX = 800;
-        let { width, height } = img;
-        if (width > height && width > MAX) { height = Math.round(height * MAX / width); width = MAX; }
-        else if (height > MAX) { width = Math.round(width * MAX / height); height = MAX; }
-        const canvas = document.createElement('canvas');
-        canvas.width = width; canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        try {
-          resolve(canvas.toDataURL('image/jpeg', 0.8));
-        } catch {
-          resolve(ev.target.result); // fallback: base64 original
-        }
-      };
-      img.onerror = () => resolve(ev.target.result);
-      img.src = ev.target.result;
-    };
-    reader.onerror = () => resolve('');
-    reader.readAsDataURL(file);
-  });
-
   const handleFoto = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => setPreview(ev.target.result);
+    reader.readAsDataURL(file);
 
     setAnalizando(true);
     setIaBadge('');
-
-    // Guardar la foto como base64 liviano — garantiza que siempre se ve
-    const base64 = await fileABase64Liviano(file);
-    if (base64) {
-      setPreview(base64);
-      set('fotoUrl', base64);
-    }
-
-    // Análisis IA en paralelo (el fotoUrl ya está como base64, no depende de R2)
-    const [iaRes] = await Promise.allSettled([
-      (async () => {
-        const fd = new FormData();
-        fd.append('file', file);
-        const r = await fetch('/api/ia/analizar-foto', { method: 'POST', body: fd });
-        return r.ok ? r.json() : null;
-      })(),
-    ]);
-
-    // Aplicar análisis IA
-    if (iaRes.status === 'fulfilled' && iaRes.value) {
-      const ia = iaRes.value;
-      setForm(f => ({
-        ...f,
-        especie: ia.especie || f.especie,
-        raza: ia.raza || f.raza,
-        color: ia.color || f.color,
-        tamano: ia.tamano || f.tamano,
-      }));
-      setIaBadge(
-        `IA detectó: ${ia.especie} · ${ia.raza} · ${COLORES[ia.color]?.label || ia.color} ` +
-        `— confirma o corrige (${Math.round((ia.confianza || 0) * 100)}% confianza)`
-      );
-    } else {
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('http://localhost:8000/api/ia/analizar-foto', { method: 'POST', body: fd });
+      if (res.ok) {
+        const ia = await res.json();
+        setForm(f => ({
+          ...f,
+          especie: ia.especie || f.especie,
+          raza: ia.raza || f.raza,
+          color: ia.color || f.color,
+          tamano: ia.tamano || f.tamano,
+        }));
+        setIaBadge(
+          `IA detectó: ${ia.especie} · ${ia.raza} · ${COLORES[ia.color]?.label || ia.color} ` +
+          `— confirma o corrige (${Math.round((ia.confianza || 0) * 100)}% confianza)`
+        );
+      }
+    } catch {
       setIaBadge('No se pudo analizar la imagen automáticamente.');
+    } finally {
+      setAnalizando(false);
     }
-
-    setAnalizando(false);
   };
 
   const handleSubmit = async (e) => {
@@ -155,12 +114,8 @@ export default function ReportarEncontrada({ onClose, onExito }) {
 
     setEnviando(true);
     try {
-      const contactoStr = (form.nombre.trim() && form.telefono.trim())
-        ? `${form.nombre.trim()} | ${form.telefono.trim()}`
-        : form.nombre.trim() || null;
-
       const payload = {
-        nombre: null,
+        nombre: form.especie ? null : form.nombre,
         especie: form.especie || null,
         raza: form.raza || null,
         color: form.color || null,
@@ -169,7 +124,6 @@ export default function ReportarEncontrada({ onClose, onExito }) {
         rangoEdad: form.rangoEdad || 'NO_SE',
         senas: form.senas.length ? form.senas : null,
         descripcion: form.descripcion || null,
-        contacto: contactoStr,
         fotoUrl: form.fotoUrl || null,
         lat: coordenadas[0],
         lng: coordenadas[1],
@@ -187,13 +141,6 @@ export default function ReportarEncontrada({ onClose, onExito }) {
       const created = await res.json();
       const mascotaId = created.id;
 
-      // Avisar al servidor Socket.io para que re-calcule coincidencias
-      fetch('/api/notificar/nuevo-reporte', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mascota: { nombre: form.nombre, id: mascotaId } }),
-      }).catch(() => {});
-
       // Buscar coincidencias
       const coinRes = await fetch('/api/coincidencias');
       if (coinRes.ok) {
@@ -208,22 +155,8 @@ export default function ReportarEncontrada({ onClose, onExito }) {
         }
       }
 
-      // Notificación en el panel para el usuario que reportó
-      dispatch({
-        type: 'ADD_NOTIFICACION',
-        payload: {
-          id: `encontrada_${mascotaId}_${Date.now()}`,
-          tipo: 'nuevo_reporte',
-          titulo: 'Reporte registrado',
-          mensaje: '¡Gracias por ayudar! Tu reporte de mascota encontrada fue publicado.',
-          timestamp: new Date().toISOString(),
-          leida: false,
-        },
-      });
-
-      // onExito muestra el mensaje de éxito y cierra solo tras 2.5s.
-      // NO llamar onClose() aquí: borraría el mensaje al instante.
       onExito?.('Mascota encontrada registrada. ¡Gracias por ayudar!');
+      onClose();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -268,36 +201,11 @@ export default function ReportarEncontrada({ onClose, onExito }) {
       {/* Tu nombre y teléfono */}
       <div className="nr-group">
         <label className="nr-label">Tu nombre *</label>
-        <input
-          className="nr-input"
-          value={form.nombre}
-          onChange={e => set('nombre', e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, ''))}
-          placeholder="¿Cómo te llamas?"
-          required
-        />
+        <input className="nr-input" value={form.nombre} onChange={e => set('nombre', e.target.value)} placeholder="¿Cómo te llamas?" required />
       </div>
       <div className="nr-group">
         <label className="nr-label">Tu teléfono *</label>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ marginRight: 4, color: '#888' }}>+56</span>
-          <input
-            className="nr-input"
-            type="tel"
-            value={(() => {
-              const raw = form.telefono.replace(/[^\d]/g, '');
-              if (!raw) return '';
-              let out = raw[0] || '';
-              if (raw.length > 1) out += ' ' + raw.slice(1, 5);
-              if (raw.length > 5) out += ' ' + raw.slice(5, 9);
-              return out;
-            })()}
-            onChange={e => set('telefono', e.target.value.replace(/[^\d]/g, ''))}
-            placeholder="9 1234 5678"
-            maxLength={12}
-            style={{ flex: 1 }}
-            required
-          />
-        </div>
+        <input className="nr-input" type="tel" value={form.telefono} onChange={e => set('telefono', e.target.value)} placeholder="+56 9 1234 5678" required />
       </div>
 
       {/* Foto con análisis IA */}

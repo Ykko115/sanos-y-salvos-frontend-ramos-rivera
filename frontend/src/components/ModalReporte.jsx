@@ -1,18 +1,10 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate, useLocation } from "react-router-dom";
 import "../css/ModalReporte.css";
-
-function fmtEnum(v) {
-  if (!v) return null;
-  return String(v).charAt(0).toUpperCase() + String(v).slice(1).toLowerCase().replace(/_/g, ' ');
-}
 
 export default function ModalReporte({ open, onClose, mascota, encodedId }) {
   const [detalleReporte, setDetalleReporte] = useState(null);
   const [cargando, setCargando] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
 
   const decodeReporteId = (value) => {
     if (!value) return null;
@@ -41,18 +33,13 @@ export default function ModalReporte({ open, onClose, mascota, encodedId }) {
     const usuarioData = (usuarioWrapper && (usuarioWrapper.usuario || usuarioWrapper)) ||
               mascotaWrapper?.usuario || raw.usuario || null;
 
-    const nombre = reporte?.nombre_mascota || mascotaData?.nombre || reporte?.nombre_usuario || '';
+    const nombre = reporte?.nombre_mascota || mascotaData?.nombre || mascotaData?.nombre || reporte?.nombre_usuario || '';
     const especie = mascotaData?.especie || mascotaData?.tipo || '';
     const raza = mascotaData?.raza || '';
-    const color = mascotaData?.color || raw?.color || '';
-    const tamano = mascotaData?.tamano || raw?.tamano || '';
-    const pelaje = mascotaData?.pelaje || raw?.pelaje || '';
-    const rangoEdad = mascotaData?.rangoEdad || raw?.rangoEdad || '';
-    const senas = mascotaData?.senas || raw?.senas || [];
     const descripcion = reporte?.descripcion || mascotaData?.descripcion || '';
     const fecha = reporte?.fechaReporte || mascotaData?.fecha_perdida || null;
     const ubicacion = reporte?.ubicacion || mascotaData?.ubicacion || null;
-    const img = reporte?.img || mascotaData?.fotoUrl || mascotaData?.img || mascotaData?.imagen || reporte?.imagen || '';
+    const img = reporte?.img || mascotaData?.img || mascotaData?.imagen || reporte?.imagen || '';
 
     const contacto = {};
     if (usuarioData) {
@@ -87,17 +74,13 @@ export default function ModalReporte({ open, onClose, mascota, encodedId }) {
       nombre,
       especie,
       raza,
-      color,
-      tamano,
-      pelaje,
-      rangoEdad,
-      senas,
       descripcion,
       fecha_perdida: fecha,
       ubicacion,
       img,
       contacto: (contacto.email || contacto.telefono) ? contacto : null,
       usuarioNombre,
+      // incluir la estructura original por si hace falta
       _raw: raw,
     };
   };
@@ -123,7 +106,7 @@ export default function ModalReporte({ open, onClose, mascota, encodedId }) {
         tStart = setTimeout(() => {
           if (!signal.aborted) setCargando(true);
         }, 0);
-        fetch(`/api/reportes/detalle/${reporteId}`, { signal })
+        fetch(`http://localhost:8080/api/reportes/detalle/${reporteId}`, { signal })
           .then(res => {
             if (!res.ok) throw new Error('Error al obtener detalles del reporte');
             return res.json();
@@ -181,70 +164,38 @@ export default function ModalReporte({ open, onClose, mascota, encodedId }) {
           </div>
         ) : (
           <div className="modal-reporte-content">
-            {(datos.img || datos.foto || datos.imagen) && (
-              <img
-                src={datos.img || datos.foto || datos.imagen}
-                alt={datos.nombre}
-                className="modal-reporte-foto"
-                onError={e => { e.target.style.display = 'none'; }}
-              />
-            )}
+            <img src={datos.img || datos.foto || datos.imagen || ''} alt={datos.nombre} className="modal-reporte-foto" />
             <div className="modal-reporte-info">
               <h2>{datos.nombre}</h2>
               <p className="especie-raza">
-                {fmtEnum(datos.especie || datos.tipo)}
-                {datos.raza ? ` · ${fmtEnum(datos.raza)}` : ''}
+                {datos.especie || datos.tipo} {datos.raza ? `- ${datos.raza}` : ''}
               </p>
-
-              <div className="modal-atributos">
-                {datos.color    && <span className="modal-atributo-chip">🎨 {fmtEnum(datos.color)}</span>}
-                {datos.tamano   && <span className="modal-atributo-chip">📏 {fmtEnum(datos.tamano)}</span>}
-                {datos.pelaje   && <span className="modal-atributo-chip">🐾 Pelaje {fmtEnum(datos.pelaje)}</span>}
-                {datos.rangoEdad && <span className="modal-atributo-chip">🗓️ {fmtEnum(datos.rangoEdad)}</span>}
-              </div>
-
-              {Array.isArray(datos.senas) && datos.senas.length > 0 && (
-                <p className="color"><strong>Señas particulares:</strong> {datos.senas.map(s => fmtEnum(s)).join(', ')}</p>
-              )}
-
-              {datos.descripcion && (
-                <p className="descripcion"><strong>Descripción:</strong> {datos.descripcion}</p>
-              )}
-
-              {datos.fecha_perdida && (
-                <p className="fecha"><strong>Fecha del reporte:</strong> {new Date(datos.fecha_perdida).toLocaleDateString('es-CL')}</p>
-              )}
-
+              {datos.color && <p className="color"><strong>Color:</strong> {datos.color}</p>}
+              {datos.descripcion && <p className="descripcion"><strong>Descripción:</strong> {datos.descripcion}</p>}
+              {datos.fecha_perdida && <p className="fecha"><strong>Fecha de pérdida:</strong> {datos.fecha_perdida}</p>}
+              {/* Última ubicación oculta por solicitud del usuario */}
               {datos.usuarioNombre && (
                 <p className="reportado-por"><strong>Reportado por:</strong> {datos.usuarioNombre}</p>
               )}
-
+              {
+                // Intentar obtener contacto desde varias posibles propiedades
+              }
               {(() => {
-                const fc = datos.contacto || {};
-                const telefono = fc.telefono || fc.phone || fc.celular || null;
-                const email = fc.email || fc.correo || fc.mail || null;
+                const fuenteContacto = datos.contacto || datos.usuario || datos.usuer || datos.reporter || datos.owner || datos.creador || {};
+                const telefono = fuenteContacto.telefono || fuenteContacto.phone || fuenteContacto.mobile || fuenteContacto.celular || fuenteContacto.cel || null;
+                const email = fuenteContacto.email || fuenteContacto.correo || fuenteContacto.correo_electronico || fuenteContacto.mail || null;
+
                 if (!telefono && !email) return null;
+
                 return (
                   <div className="contacto">
                     <p><strong>Contacto:</strong></p>
-                    {telefono && <p>📱 <a href={`tel:${telefono}`}>{telefono}</a></p>}
-                    {email    && <p>📧 <a href={`mailto:${email}`}>{email}</a></p>}
+                    <p>📱 {telefono ? <a href={`tel:${telefono}`}>{telefono}</a> : 'No disponible'}</p>
+                    <p>📧 {email ? <a href={`mailto:${email}`}>{email}</a> : 'No disponible'}</p>
                   </div>
                 );
               })()}
-
-              <button
-                className="btn-reportar"
-                onClick={() => {
-                  onClose();
-                  const bgLoc = location.state?.backgroundLocation || { pathname: '/', search: '', hash: '' };
-                  navigate('/nuevo-reporte', {
-                    state: { backgroundLocation: bgLoc, flujoInicial: 'encontrada' },
-                  });
-                }}
-              >
-                He visto esta mascota
-              </button>
+              <button className="btn-reportar">He visto esta mascota</button>
             </div>
           </div>
         )}

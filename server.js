@@ -41,8 +41,6 @@ function normalizarReporte(raw) {
 
   return {
     id: String(id || `${Date.now()}_${Math.random()}`),
-    usuarioId: reporte.usuarioId ?? raw.usuarioId ?? md?.usuarioId ?? null,
-    mascotaId: reporte.mascotaId ?? raw.mascotaId ?? md?.id ?? null,
     nombre: reporte.nombre_mascota || md?.nombre || reporte.nombreMascota || 'Sin nombre',
     especie: (md?.especie || md?.tipo || reporte?.especie || '').toLowerCase(),
     raza: (md?.raza || reporte?.raza || '').toLowerCase(),
@@ -145,10 +143,19 @@ async function pollCoincidencias() {
   const nuevas = coincidencias.filter((c) => !vistos.has(c.id));
   nuevas.forEach((c) => vistos.add(c.id));
 
-  // Nota: las notificaciones de coincidencia por usuario se entregan vía
-  // Kafka (coincidencia.nueva → sala del dueño) y el polling de la BD en el
-  // frontend. Aquí ya NO se hace broadcast para no avisar a todos los usuarios.
-  // Las coincidencias del mapa se sirven por GET /api/coincidencias.
+  if (!primerPoll && nuevas.length) {
+    nuevas.forEach((c) => {
+      io.emit('nueva_coincidencia', {
+        tipo: 'nueva_coincidencia',
+        titulo: '¡Nueva coincidencia encontrada!',
+        mensaje: `${c.mascota_perdida.nombre} coincide ${c.score}% con mascota encontrada en ${c.mascota_encontrada.comuna || 'zona cercana'}`,
+        mascota_id: c.mascota_perdida.id,
+        timestamp: new Date().toISOString(),
+        leida: false,
+        coincidencia: c,
+      });
+    });
+  }
   primerPoll = false;
 }
 
@@ -251,111 +258,40 @@ app.get('/api/reportes/exportar', async (req, res) => {
   res.status(400).json({ error: 'Formato no soportado. Usa pdf o xlsx.' });
 });
 
-// Registrar un nuevo reporte: solo dispara el recálculo de coincidencias
-// para el mapa. NO se emite 'nuevo_reporte' a todos — esa notificación
-// llegaba al panel de cada usuario conectado (no corresponde).
+// Trigger socket events from frontend
 app.post('/api/notificar/nuevo-reporte', (req, res) => {
+  const { mascota } = req.body || {};
+  io.emit('nuevo_reporte', {
+    tipo: 'nuevo_reporte',
+    titulo: 'Nuevo reporte registrado',
+    mensaje: `Se registró un avistamiento${mascota?.nombre ? ` de ${mascota.nombre}` : ''}`,
+    mascota_id: mascota?.id || null,
+    timestamp: new Date().toISOString(),
+    leida: false,
+  });
   setTimeout(pollCoincidencias, 3000);
   res.json({ ok: true });
 });
 
-// Endpoint legacy de reunión. La notificación real la entrega Kafka
-// (mascota.reunida → sala del dueño). Aquí ya NO se hace broadcast.
 app.post('/api/notificar/mascota-reunida', (req, res) => {
+  const { coincidenciaId, mascotaId } = req.body || {};
+  io.emit('mascota_reunida', {
+    tipo: 'mascota_reunida',
+    titulo: '¡Mascota reunida con su familia!',
+    mensaje: 'Una mascota ha sido reunida con su familia.',
+    mascota_id: mascotaId || null,
+    coincidencia_id: coincidenciaId || null,
+    timestamp: new Date().toISOString(),
+    leida: false,
+  });
   res.json({ ok: true });
 });
 
 // Socket.io connection
 io.on('connection', (socket) => {
   console.log('[socket] cliente conectado:', socket.id);
-  socket.on('join', (userId) => {
-    if (userId) {
-      socket.join(String(userId));
-      console.log(`[socket] ${socket.id} entró a sala usuario:${userId}`);
-    }
-  });
   socket.on('disconnect', () => console.log('[socket] cliente desconectado:', socket.id));
 });
-
-// ── Kafka consumer (eventos en tiempo real desde mascotas service) ────────────
-;(async () => {
-  let KafkaClass;
-  try { KafkaClass = require('kafkajs').Kafka; } catch { return; }
-
-  const kafka = new KafkaClass({
-    clientId: 'sanos-salvos-socket',
-    brokers: ['localhost:29092'],
-    retry: { retries: 5, initialRetryTime: 3000 },
-    logLevel: 1, // solo errores
-  });
-
-  const consumer = kafka.consumer({ groupId: 'socket-notifier-group' });
-
-  try {
-    await consumer.connect();
-    await consumer.subscribe({
-      topics: ['coincidencia.nueva', 'mascota.perdida', 'mascota.encontrada', 'mascota.reunida'],
-      fromBeginning: false,
-    });
-
-    await consumer.run({
-      eachMessage: async ({ topic, message }) => {
-        try {
-          const data = JSON.parse(message.value.toString());
-
-          if (topic === 'coincidencia.nueva') {
-            const payload = {
-              tipo: 'nueva_coincidencia',
-              titulo: '¡Nueva coincidencia encontrada!',
-              mensaje: data.mensaje || `${data.porcentaje ?? '?'}% de coincidencia detectada`,
-              mascota_id: data.mascotaIdPerdida || null,
-              mascota_candidata_id: data.mascotaIdCandidata || null,
-              porcentaje: data.porcentaje,
-              timestamp: new Date().toISOString(),
-              leida: false,
-            };
-            const userId = data.usuarioId;
-            if (userId) {
-              // Solo al dueño de la mascota perdida — nunca broadcast
-              io.to(String(userId)).emit('nueva_coincidencia', payload);
-              console.log(`[Kafka→Socket] coincidencia.nueva → usuario:${userId} (${data.porcentaje}%)`);
-            } else {
-              // Sin dueño identificable no se emite a nadie (evita avisar a todos).
-              // El frontend igual la recibe vía polling de BD si le corresponde.
-              console.log(`[Kafka→Socket] coincidencia.nueva sin usuarioId — no se emite`);
-            }
-          }
-
-          if (topic === 'mascota.perdida' || topic === 'mascota.encontrada') {
-            setTimeout(pollCoincidencias, 4000);
-          }
-
-          if (topic === 'mascota.reunida') {
-            const payload = {
-              tipo: 'mascota_reunida',
-              titulo: '¡Mascota reunida con su familia!',
-              mensaje: `${data.nombre || 'Tu mascota'} ha vuelto a casa.`,
-              mascota_id: data.mascotaId || null,
-              timestamp: new Date().toISOString(),
-              leida: false,
-            };
-            const userId = data.usuarioId;
-            if (userId) {
-              // Solo al dueño de la mascota reunida — evita avisar a todos
-              io.to(String(userId)).emit('mascota_reunida', payload);
-              console.log(`[Kafka→Socket] mascota.reunida → usuario:${userId}`);
-            }
-            // Sin usuarioId (p.ej. la mascota encontrada) no se emite nada.
-          }
-        } catch { /* ignorar mensajes mal formados */ }
-      },
-    });
-
-    console.log('[Kafka] Consumidor listo → coincidencia.nueva | mascota.perdida | mascota.encontrada | mascota.reunida');
-  } catch (err) {
-    console.warn('[Kafka] No disponible — notificaciones en tiempo real desactivadas:', err.message);
-  }
-})();
 
 server.listen(PORT, () => {
   console.log(`\n[OK] Servidor Socket.io listo en http://localhost:${PORT}`);

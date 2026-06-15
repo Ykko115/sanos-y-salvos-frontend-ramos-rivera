@@ -1,14 +1,10 @@
+
 import '../css/Home.css';
 import { Link, useLocation } from 'react-router-dom';
 import MapaInteractivo from './MapaInteractivo';
 
 export default function Home() {
   const location = useLocation();
-  const isLoggedIn = (() => {
-    try { return !!JSON.parse(localStorage.getItem('usuario') || 'null')?.user; }
-    catch { return false; }
-  })();
-
   return (
     <main className="home">
       <section className="hero-section bg-light py-5">
@@ -30,11 +26,12 @@ export default function Home() {
         </div>
       </section>
 
+
       <section className="mapa-section">
         <div className="container">
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
             <Link
-              to="/nuevo-reporte"
+              to="/reportes"
               state={{ backgroundLocation: location }}
               className="btn btn-primary"
             >
@@ -45,24 +42,23 @@ export default function Home() {
         </div>
       </section>
 
-      {!isLoggedIn && (
-        <section className="cta-section">
-          <div className="cta-content">
-            <h2>¿Tienes una Mascota Perdida?</h2>
-            <p>
-              No esperes más. Crea una cuenta y reporta tu mascota ahora mismo.
-              Cada minuto cuenta.
-            </p>
-            <Link
-              to="/registro"
-              state={{ backgroundLocation: location }}
-              className="btn btn-primary-large"
-            >
-              Comenzar Ahora
-            </Link>
-          </div>
-        </section>
-      )}
+      <section className="cta-section">
+        <div className="cta-content">
+          <h2>¿Tienes una Mascota Perdida?</h2>
+          <p>
+            No esperes más. Crea una cuenta y reporta tu mascota ahora mismo.
+            Cada minuto cuenta.
+          </p>
+          <Link
+            to="/registro"
+            state={{ backgroundLocation: location }}
+            className="btn btn-primary-large"
+          >
+            Comenzar Ahora
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }
+

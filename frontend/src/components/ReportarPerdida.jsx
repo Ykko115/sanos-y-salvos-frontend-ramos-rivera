@@ -116,8 +116,8 @@ export default function ReportarPerdida({ onClose, onExito }) {
         }
       }
 
-      // onExito muestra el éxito y cierra solo tras 2.5s; no llamar onClose aquí.
       onExito?.(`Reporte de pérdida de ${elegida.nombre} enviado.`);
+      onClose();
     } catch (err) {
       setError('Error al enviar el reporte.');
     } finally {
