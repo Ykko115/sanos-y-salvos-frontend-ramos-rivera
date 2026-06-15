@@ -7,6 +7,7 @@ import TabNotificaciones from './Sidebar/TabNotificaciones';
 import TabCoincidencias from './Sidebar/TabCoincidencias';
 import TabReporte from './Sidebar/TabReporte';
 import TabMisReportes from './Sidebar/TabMisReportes';
+import { getToken } from '../js/auth';
 import '../css/Navbar.css';
 import '../css/Sidebar.css';
 
@@ -94,6 +95,12 @@ export default function Navbar() {
 
   useEffect(() => {
     const cargarUsuario = () => {
+      // getToken() decodifica el JWT, elimina localStorage si expiró y retorna null
+      const token = getToken();
+      if (!token) {
+        setUser(null);
+        return;
+      }
       const usuarioGuardado = localStorage.getItem('usuario');
       if (usuarioGuardado) {
         try {
@@ -171,10 +178,43 @@ export default function Navbar() {
     );
   } else if (user.user?.rol?.toLowerCase() === 'admin') {
     authSection = (
-      <>
-        <span className="nav-link user-role" tabIndex={-1}>Administración</span>
-        <button className="nav-link btn-logout" onClick={handleLogout}>Cerrar Sesión</button>
-      </>
+      <div
+        className="user-dropdown"
+        onMouseEnter={() => {
+          if (dropdownUserTimeoutRef.current) clearTimeout(dropdownUserTimeoutRef.current);
+          setDropdownUserOpen(true);
+        }}
+        onMouseLeave={() => {
+          dropdownUserTimeoutRef.current = setTimeout(() => setDropdownUserOpen(false), 300);
+        }}
+      >
+        <button
+          className="nav-link user-name btn-perfil"
+          onClick={() => setDropdownUserOpen(!dropdownUserOpen)}
+        >
+          🛡️ Admin ▼
+        </button>
+        {dropdownUserOpen && (
+          <div className="dropdown-user-menu">
+            <button className="dropdown-user-item" onClick={() => { setDropdownUserOpen(false); navigate('/admin'); }}>
+              🏠 Panel Admin
+            </button>
+            <button className="dropdown-user-item" onClick={() => { setDropdownUserOpen(false); navigate('/admin/usuarios'); }}>
+              👥 Usuarios
+            </button>
+            <button className="dropdown-user-item" onClick={() => { setDropdownUserOpen(false); navigate('/admin/reportes'); }}>
+              📋 Reportes
+            </button>
+            <button className="dropdown-user-item" onClick={() => { setDropdownUserOpen(false); navigate('/admin/mascotas'); }}>
+              🐾 Mascotas
+            </button>
+            <div className="dropdown-divider"></div>
+            <button className="dropdown-user-item logout-item" onClick={handleLogout}>
+              🚪 Cerrar Sesión
+            </button>
+          </div>
+        )}
+      </div>
     );
   } else if (user.user?.rol?.toLowerCase() === 'user') {
     let nombreCompleto = '';

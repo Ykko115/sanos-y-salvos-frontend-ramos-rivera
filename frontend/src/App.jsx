@@ -11,6 +11,10 @@ import RegistroMascota from './components/RegistroMascota';
 import Perfil from './components/Perfil';
 import MisMascotas from './components/MisMascotas';
 import BannerNotif from './components/Notificaciones/BannerNotif';
+import AdminPanel from './components/admin/AdminPanel';
+import AdminUsuarios from './components/admin/AdminUsuarios';
+import AdminReportes from './components/admin/AdminReportes';
+import AdminMascotas from './components/admin/AdminMascotas';
 import { AppProvider } from './context/AppContext';
 import { useSocket } from './hooks/useSocket';
 import './App.css';
@@ -40,6 +44,10 @@ function ModalRoutes() {
         <Route path="/" element={<Home />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/mis-mascotas" element={<MisMascotas />} />
+        <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/admin/usuarios" element={<AdminUsuarios />} />
+        <Route path="/admin/reportes" element={<AdminReportes />} />
+        <Route path="/admin/mascotas" element={<AdminMascotas />} />
       </Routes>
 
       {backgroundLocation && (
