@@ -14,6 +14,14 @@ export function useSocket() {
     });
     socketRef.current = socket;
 
+    socket.on('connect', () => {
+      try {
+        const u = JSON.parse(localStorage.getItem('usuario') || 'null');
+        const userId = u?.user?.id ?? u?.id ?? null;
+        if (userId) socket.emit('join', userId);
+      } catch { /* sin sesión activa */ }
+    });
+
     const mkNotif = (data) => ({ ...data, id: `notif_${Date.now()}_${Math.random()}`, leida: false });
 
     socket.on('nueva_coincidencia', (data) => {

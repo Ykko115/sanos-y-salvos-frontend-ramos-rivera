@@ -1,4 +1,5 @@
 ﻿import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import ReportarPerdida from "./ReportarPerdida";
 import ReportarEncontrada from "./ReportarEncontrada";
 import "../css/NuevoReporte.css";
@@ -24,7 +25,8 @@ const TITULOS = {
 };
 
 export default function NuevoReporte({ open, onClose }) {
-  const [flujo, setFlujo] = useState(null);
+  const location = useLocation();
+  const [flujo, setFlujo] = useState(location.state?.flujoInicial || null);
   const [exito, setExito] = useState("");
 
   if (!open) return null;
@@ -49,9 +51,21 @@ export default function NuevoReporte({ open, onClose }) {
         </div>
 
         {exito ? (
-          <div style={{ padding: 32, textAlign: "center" }}>
-            <div style={{ fontSize: "3rem", marginBottom: 12 }}>OK</div>
-            <p style={{ color: "#2d8a4e", fontWeight: 700, fontSize: "1rem" }}>{exito}</p>
+          <div style={{ padding: "40px 32px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+            <div style={{
+              width: 72, height: 72, borderRadius: "50%",
+              background: "linear-gradient(135deg, #2d8a4e 0%, #3aad65 100%)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 4px 20px rgba(45,138,78,0.35)",
+            }}>
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <div>
+              <p style={{ color: "#1a6635", fontWeight: 700, fontSize: "1.1rem", margin: "0 0 6px" }}>{exito}</p>
+              <p style={{ color: "#888", fontSize: "0.82rem", margin: 0 }}>Cerrando en unos segundos…</p>
+            </div>
           </div>
         ) : !flujo ? (
           <div className="nr-selector">
