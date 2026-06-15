@@ -27,7 +27,7 @@ export default function Login() {
     validarFormularioLogin,
     (nombre) => {
       setBienvenida(nombre);
-      setTimeout(() => navigate('/'), 2000);
+      setTimeout(() => window.location.replace('/'), 2000);
     }
   );
 
