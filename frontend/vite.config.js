@@ -5,16 +5,12 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // Coincidencias → FastAPI (scoring engine)
-      '/api/coincidencias':     { target: 'http://localhost:8000', changeOrigin: true },
-      // IA análisis foto → FastAPI
-      '/api/ia':                { target: 'http://localhost:8000', changeOrigin: true },
-      // Rutas del servidor Node
+      // Rutas del servidor Node (antes que /api para tomar precedencia)
       '/api/reportes/resumen':  { target: 'http://localhost:3001', changeOrigin: true },
       '/api/reportes/exportar': { target: 'http://localhost:3001', changeOrigin: true },
       '/api/notificar':         { target: 'http://localhost:3001', changeOrigin: true },
       '/socket.io':             { target: 'http://localhost:3001', changeOrigin: true, ws: true },
-      // Resto → Spring Boot API Gateway
+      // Todo lo demás → API Gateway (incluye /api/coincidencias, /api/match, /api/ia, etc.)
       '/api': { target: 'http://localhost:8080', changeOrigin: true },
     }
   }
