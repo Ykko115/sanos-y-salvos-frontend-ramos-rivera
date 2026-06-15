@@ -5,8 +5,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // Coincidencias → Node server (scoring engine local)
-      '/api/coincidencias':     { target: 'http://localhost:3001', changeOrigin: true },
+      // Coincidencias → FastAPI (scoring engine)
+      '/api/coincidencias':     { target: 'http://localhost:8000', changeOrigin: true },
       // IA análisis foto → FastAPI
       '/api/ia':                { target: 'http://localhost:8000', changeOrigin: true },
       // Rutas del servidor Node
