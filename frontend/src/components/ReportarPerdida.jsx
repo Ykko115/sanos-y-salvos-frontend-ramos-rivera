@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { COLORES } from '../constants/enums';
+import { ESPECIES, COLORES } from '../constants/enums';
 
 // Pin de clic — círculo rojo sólido para marcar el lugar del reporte
 const pinIcon = L.divIcon({
@@ -36,14 +36,7 @@ function emoji(esp) {
 
 export default function ReportarPerdida({ onClose, onExito }) {
   const [mascotas, setMascotas] = useState([]);
-  const [logueado, setLogueado] = useState(() => {
-  try {
-    const u = JSON.parse(localStorage.getItem('usuario') || 'null');
-    return !!u?.user?.id;
-  } catch {
-    return false;
-  }
-  });
+  const [logueado, setLogueado] = useState(false);
   const [elegida, setElegida] = useState(null);
   const [coordenadas, setCoordenadas] = useState(null);
   const [miUbicacion, setMiUbicacion] = useState(null);
@@ -54,25 +47,15 @@ export default function ReportarPerdida({ onClose, onExito }) {
   const [error, setError] = useState('');
   const [coincidencias, setCoincidencias] = useState([]);
 
-// El efecto ya no toca logueado de forma síncrona
-useEffect(() => {
-  const u = (() => {
-    try { return JSON.parse(localStorage.getItem('usuario') || 'null'); }
-    catch { return null; }
-  })();
-  const uid = u?.user?.id;
-
-  if (!uid) return; // ✅ sin setState aquí
-
-  fetch(`/api/mascotas/usuario/${uid}`)
-    .then(r => r.ok ? r.json() : [])
-    .then(data => {
-      setLogueado(true);                                    // ✅ async
-      setMascotas(Array.isArray(data) ? data : []);        // ✅ async
-    })
-    .catch(() => {
-      setLogueado(false);                                   // ✅ async
-    });
+  useEffect(() => {
+    const u = (() => { try { return JSON.parse(localStorage.getItem('usuario') || 'null'); } catch { return null; } })();
+    const uid = u?.user?.id;
+    if (!uid) { setLogueado(false); return; }
+    setLogueado(true);
+    fetch(`/api/mascotas/usuario/${uid}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setMascotas(Array.isArray(data) ? data : []))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -133,9 +116,9 @@ useEffect(() => {
         }
       }
 
-      // onExito muestra el éxito y cierra solo tras 2.5s; no llamar onClose aquí.
       onExito?.(`Reporte de pérdida de ${elegida.nombre} enviado.`);
-    } catch {
+      onClose();
+    } catch (err) {
       setError('Error al enviar el reporte.');
     } finally {
       setEnviando(false);

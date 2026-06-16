@@ -143,8 +143,8 @@ export default function MisMascotas() {
               <div key={mascota.id} className="mascota-card">
                 <div className="mascota-header">
                   <h3>{mascota.nombre}</h3>
-                  <span className={`badge ${mascota.estado === 'REUNIDO' ? 'badge-encontrado' : `badge-${mascota.estado.toLowerCase()}`}`}>
-                    {mascota.estado === 'PERDIDO' ? 'Perdido' : 'Encontrado'}
+                  <span className={`badge badge-${mascota.estado.toLowerCase()}`}>
+                    {mascota.estado}
                   </span>
                 </div>
 
