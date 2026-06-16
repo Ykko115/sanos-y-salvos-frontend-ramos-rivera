@@ -123,7 +123,7 @@ export default function ModalReporte({ open, onClose, mascota, encodedId }) {
         tStart = setTimeout(() => {
           if (!signal.aborted) setCargando(true);
         }, 0);
-        fetch(`/api/reportes/detalle/${reporteId}`, { signal })
+        fetch(`http://localhost:8080/api/reportes/detalle/${reporteId}`, { signal })
           .then(res => {
             if (!res.ok) throw new Error('Error al obtener detalles del reporte');
             return res.json();

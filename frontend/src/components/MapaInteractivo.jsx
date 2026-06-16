@@ -3,69 +3,63 @@ import { MapContainer, TileLayer, Marker, Circle, Polyline } from 'react-leaflet
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../css/MapaInteractivo.css';
+// import { mascotasPerdidas as mascotasEjemplo } from '../js/datos_mascotas';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import ModalReporte from './ModalReporte';
 
-// ── Constantes ────────────────────────────────────────────────────
 
-const ESTADO_COLOR = {
-  PERDIDO:    '#e24b4a',
-  ENCONTRADO: '#2d8a4e',
-  REUNIDO:    '#9ca3af',
-};
+const normalizeReporte = (raw) => {
+  if (!raw) return null;
 
-function getEmoji(especie) {
-  const e = String(especie || '').toUpperCase();
-  if (e === 'PERRO')  return '🐕';
-  if (e === 'GATO')   return '🐈';
-  if (e === 'ROEDOR') return '🐹';
-  return '🐾';
-}
+  const reporte = raw.reporte || raw;
+  const mascotaWrapper = raw.mascota || null;
+  const mascotaData = mascotaWrapper?.mascota || mascotaWrapper || null;
+  const usuarioWrapper = raw.usuario || mascotaWrapper?.usuario || null;
+  const usuarioData = usuarioWrapper?.usuario || usuarioWrapper || null;
 
 // ── Iconos ────────────────────────────────────────────────────────
 
-const createPetIcon = (especie, estado) => {
-  const emoji = getEmoji(especie);
-  const color = ESTADO_COLOR[String(estado || '').toUpperCase()] || '#e24b4a';
+const getReporteId = (m) => {
+  return (
+    m?.id ||
+    m?.reporteId || m?.reporte_id || m?.reportId || m?.report_id || m?.idReporte || m?.id_reporte ||
+    m?.reporte?.id || m?.reporte?.reportId || null
+  );
+};
+
+const encodeReporteId = (id) => {
+  try {
+    return encodeURIComponent(btoa(String(id)));
+  } catch {
+    return String(id);
+  }
+};
+
+
+// Icono personalizado para los marcadores
+const createCustomIcon = (especie) => {
+  const especieNormalizada = String(especie || '').toLowerCase();
+  const emoji = especieNormalizada.includes('perro') ? '🐕' : '🐈';
   return L.divIcon({
-    className: '',
-    html: `<div style="background:white;border:3px solid ${color};border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 2px 8px rgba(0,0,0,0.3)">${emoji}</div>`,
+    html: `<div class="custom-marker">${emoji}</div>`,
+    className: 'custom-icon',
     iconSize: [40, 40],
     iconAnchor: [20, 20],
-    popupAnchor: [0, -24],
+    popupAnchor: [0, -20]
   });
 };
 
-const createPulsingIcon = (tipo) => {
-  const cls   = tipo === 'perdida' ? 'pin-perdida-coincidencia' : 'pin-encontrada-coincidencia';
-  const emoji = tipo === 'perdida' ? '🐾' : '🔍';
-  return L.divIcon({
-    html: `<div class="${cls}">${emoji}</div>`,
-    className: 'custom-icon',
-    iconSize: [44, 44], iconAnchor: [22, 22], popupAnchor: [0, -26],
-  });
-};
-
-const createLabelIcon = (texto) => L.divIcon({
-  html: `<div class="label-coincidencia">${texto}</div>`,
-  className: '',
-  iconSize: null, iconAnchor: [40, 12],
-});
-
+// Icono para la ubicación del usuario
 const userLocationIcon = L.divIcon({
   html: '<div class="custom-marker user-marker">📍</div>',
   className: 'custom-icon',
-  iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -20],
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
+  popupAnchor: [0, -20]
 });
 
-// ── Helpers ───────────────────────────────────────────────────────
-
-function midpoint(lat1, lng1, lat2, lng2) {
-  return [(lat1 + lat2) / 2, (lng1 + lng2) / 2];
-}
-
-// ── Componente principal ──────────────────────────────────────────
 
 export default function MapaInteractivo() {
   const navigate   = useNavigate();
@@ -136,22 +130,24 @@ export default function MapaInteractivo() {
     let watchId;
     if (navigator.geolocation) {
       watchId = navigator.geolocation.watchPosition(
-        pos => { setUserLocation([pos.coords.latitude, pos.coords.longitude]); setGeoError(null); },
-        ()  => { setUserLocation(null); setGeoError('No se pudo obtener tu ubicación precisa.'); },
+        (pos) => {
+          const coords = [pos.coords.latitude, pos.coords.longitude];
+          setUserLocation(coords);
+          setGeoError(null);
+        },
+        () => {
+          setUserLocation(null);
+          setGeoError('No se pudo obtener tu ubicación precisa.');
+        },
         { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
       );
     }
-    return () => { if (watchId) navigator.geolocation.clearWatch(watchId); };
+    return () => {
+      if (watchId) navigator.geolocation.clearWatch(watchId);
+    };
   }, []);
 
-  const perdidaIdSet   = new Set(coincidencias.map(c => String(c.mascota_perdida.id)));
-  const encontradaIdSet = new Set(coincidencias.map(c => String(c.mascota_encontrada.id)));
-
-  const abrirSidebar = () => {
-    dispatch({ type: 'ABRIR_SIDEBAR' });
-    dispatch({ type: 'SET_TAB', payload: 'coincidencias' });
-  };
-
+  
   const coordenadasCentro = userLocation || [-33.5167, -70.7617];
   const reunidasSet = new Set((mascotasReunidas || []).map(String));
   const visibles = mascotas.filter(m =>
@@ -166,9 +162,8 @@ export default function MapaInteractivo() {
       <div className="mapa-header">
         <h2>🗺️ Mapa de Mascotas Perdidas</h2>
         <p>Haz clic en los marcadores para ver los detalles</p>
-        {geoError && <p style={{ color: '#ff5252', fontWeight: 'bold' }}>{geoError}</p>}
+        {geoError && <p style={{color:'#ff5252', fontWeight:'bold'}}>{geoError}</p>}
       </div>
-
       <MapContainer
         center={coordenadasCentro}
         zoom={userLocation ? 15 : 13}
@@ -183,11 +178,10 @@ export default function MapaInteractivo() {
 
         {/* Ubicación del usuario */}
         {userLocation && (
-          <>
-            <Marker position={userLocation} icon={userLocationIcon} />
-            <Circle center={userLocation} radius={500}
-              pathOptions={{ color: '#27ae60', fillOpacity: 0.08, weight: 1.5 }} />
-          </>
+          <Marker position={userLocation} icon={userLocationIcon} />
+        )}
+        {userLocation && (
+          <Circle center={userLocation} radius={500} pathOptions={{ color: '#27ae60', fillOpacity: 0.1 }} />
         )}
 
         {/* Marcadores de mascotas (solo PERDIDO y ENCONTRADO) */}
@@ -255,15 +249,9 @@ export default function MapaInteractivo() {
           );
         })}
       </MapContainer>
-
       <div className="mapa-info">
         <p>
-          Total de mascotas reportadas: <strong>{visibles.length}</strong>
-          {coincidencias.length > 0 && (
-            <span style={{ marginLeft: 12, color: '#f59e0b', fontWeight: 700 }}>
-              • {coincidencias.length} coincidencia{coincidencias.length !== 1 ? 's' : ''} activa{coincidencias.length !== 1 ? 's' : ''}
-            </span>
-          )}
+          Total de mascotas reportadas: <strong>{mascotas.length}</strong>
         </p>
       </div>
 

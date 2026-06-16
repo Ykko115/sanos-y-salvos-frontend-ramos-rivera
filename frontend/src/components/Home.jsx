@@ -1,3 +1,4 @@
+
 import '../css/Home.css';
 import { Link, useLocation } from 'react-router-dom';
 import MapaInteractivo from './MapaInteractivo';
@@ -30,11 +31,12 @@ export default function Home() {
         </div>
       </section>
 
+
       <section className="mapa-section">
         <div className="container">
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
             <Link
-              to="/nuevo-reporte"
+              to="/reportes"
               state={{ backgroundLocation: location }}
               className="btn btn-primary"
             >
@@ -66,3 +68,4 @@ export default function Home() {
     </main>
   );
 }
+

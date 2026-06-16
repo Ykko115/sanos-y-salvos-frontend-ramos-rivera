@@ -17,7 +17,6 @@ export default function Login() {
 
   const [errores, establecerErrores] = useState({});
   const [cargando, establecerCargando] = useState(false);
-  const [bienvenida, setBienvenida] = useState('');
 
   const manejadorCambio = crearManejadorCambio(establecerDatosFormulario, establecerErrores);
   const manejadorEnvio = crearManejadorEnvioLogin(
@@ -34,77 +33,64 @@ export default function Login() {
   return (
     <div className="registro-overlay">
       <div className="registro-container">
-        {!bienvenida && (
-          <button className="close-btn" onClick={() => navigate('/')}>
-            ✕
-          </button>
-        )}
+        <button className="close-btn" onClick={() => navigate('/') }>
+          ✕
+        </button>
 
-        {bienvenida ? (
-          <div className="login-bienvenida">
-            <div className="bienvenida-icono">🐾</div>
-            <h2>¡Bienvenido, {bienvenida}!</h2>
-            <p>Sesión iniciada correctamente</p>
-            <div className="bienvenida-barra">
-              <div className="bienvenida-barra-progreso" />
-            </div>
+        <div className="registro-header">
+          <h2>🐾 Iniciar Sesión</h2>
+          <p>Accede a tu cuenta de Sanos y Salvos</p>
+        </div>
+
+        <form onSubmit={manejadorEnvio} className="registro-form">
+          <div className="form-group">
+            <label htmlFor="email">Correo Electrónico</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={datosFormulario.email}
+              onChange={manejadorCambio}
+              placeholder="tu@correo.com"
+              className={errores.email ? 'input-error' : ''}
+            />
+            {errores.email && (
+              <span className="error-message">{errores.email}</span>
+            )}
           </div>
-        ) : (
-          <>
-            <div className="registro-header">
-              <h2>🐾 Iniciar Sesión</h2>
-              <p>Accede a tu cuenta de Sanos y Salvos</p>
-            </div>
 
-            <form onSubmit={manejadorEnvio} className="registro-form">
-              <div className="form-group">
-                <label htmlFor="email">Correo Electrónico</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={datosFormulario.email}
-                  onChange={manejadorCambio}
-                  placeholder="tu@correo.com"
-                  className={errores.email ? 'input-error' : ''}
-                />
-                {errores.email && (
-                  <span className="error-message">{errores.email}</span>
-                )}
-              </div>
+          <div className="form-group">
+            <label htmlFor="password">Contraseña</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={datosFormulario.password}
+              onChange={manejadorCambio}
+              placeholder="••••••••"
+              className={errores.password ? 'input-error' : ''}
+            />
+            {errores.password && (
+              <span className="error-message">{errores.password}</span>
+            )}
+          </div>
 
-              <div className="form-group">
-                <label htmlFor="password">Contraseña</label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={datosFormulario.password}
-                  onChange={manejadorCambio}
-                  placeholder="••••••••"
-                  className={errores.password ? 'input-error' : ''}
-                />
-                {errores.password && (
-                  <span className="error-message">{errores.password}</span>
-                )}
-              </div>
+          {errores.submit && (
+            <div className="error-message-submit">{errores.submit}</div>
+          )}
 
-              {errores.submit && (
-                <div className="error-message-submit">{errores.submit}</div>
-              )}
+          <a href="#" className="forgot-password">
+            ¿Olvidaste tu contraseña?
+          </a>
 
-              <a href="#" className="forgot-password">
-                ¿Olvidaste tu contraseña?
-              </a>
-
-              <button
-                type="submit"
-                className="btn-submit"
-                disabled={cargando}
-              >
-                {cargando ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-              </button>
-            </form>
+          <button
+            type="submit"
+            className="btn-submit"
+            disabled={cargando}
+          >
+            {cargando ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+          </button>
+        </form>
 
             <div className="registro-footer">
               <p>
