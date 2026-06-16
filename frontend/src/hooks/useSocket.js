@@ -7,12 +7,22 @@ export function useSocket() {
   const socketRef = useRef(null);
 
   useEffect(() => {
-    const socket = io('/', {
+    const socketUrl = import.meta.env.DEV ? 'http://localhost:3001' : '/';
+    const socket = io(socketUrl, {
+      transports: ['websocket'],
       autoConnect: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 2000,
+      reconnectionAttempts: 3,
+      reconnectionDelay: 5000,
     });
     socketRef.current = socket;
+
+    socket.on('connect', () => {
+      try {
+        const u = JSON.parse(localStorage.getItem('usuario') || 'null');
+        const userId = u?.user?.id ?? u?.id ?? null;
+        if (userId) socket.emit('join', userId);
+      } catch { /* sin sesión activa */ }
+    });
 
     const mkNotif = (data) => ({ ...data, id: `notif_${Date.now()}_${Math.random()}`, leida: false });
 

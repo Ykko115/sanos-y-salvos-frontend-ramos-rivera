@@ -201,6 +201,23 @@
   font-size: 1.03rem;
 }
 
+.modal-atributos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.2rem 0;
+}
+
+.modal-atributo-chip {
+  background: #f0faf4;
+  border: 1px solid #c6e8d3;
+  color: #1d6b3e;
+  border-radius: 20px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
 .color,
 .fecha,
 .reportado-por {

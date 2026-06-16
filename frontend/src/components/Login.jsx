@@ -1,5 +1,5 @@
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { validarFormularioLogin } from '../js/validaciones';
 import { crearManejadorCambio, crearManejadorEnvioLogin } from '../js/manejadoresFormulario';
 import { useState } from 'react';
@@ -8,6 +8,8 @@ import '../css/Registro.css';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const bgLocation = location.state?.backgroundLocation || { pathname: '/' };
   const [datosFormulario, establecerDatosFormulario] = useState({
     email: '',
     password: '',
@@ -22,7 +24,10 @@ export default function Login() {
     establecerErrores,
     establecerCargando,
     validarFormularioLogin,
-    () => navigate('/')
+    (nombre) => {
+      setBienvenida(nombre);
+      setTimeout(() => window.location.replace('/'), 2000);
+    }
   );
 
   return (
@@ -87,17 +92,19 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="registro-footer">
-          <p>
-            ¿No tienes cuenta?{' '}
-            <button
-              className="switch-button"
-              onClick={() => navigate('/registro')}
-            >
-              Regístrate aquí
-            </button>
-          </p>
-        </div>
+            <div className="registro-footer">
+              <p>
+                ¿No tienes cuenta?{' '}
+                <button
+                  className="switch-button"
+                  onClick={() => navigate('/registro', { state: { backgroundLocation: bgLocation } })}
+                >
+                  Regístrate aquí
+                </button>
+              </p>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
