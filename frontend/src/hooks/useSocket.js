@@ -7,12 +7,10 @@ export function useSocket() {
   const socketRef = useRef(null);
 
   useEffect(() => {
-    const socketUrl = import.meta.env.DEV ? 'http://localhost:3001' : '/';
-    const socket = io(socketUrl, {
-      transports: ['websocket'],
+    const socket = io('/', {
       autoConnect: true,
-      reconnectionAttempts: 3,
-      reconnectionDelay: 5000,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
     });
     socketRef.current = socket;
 
