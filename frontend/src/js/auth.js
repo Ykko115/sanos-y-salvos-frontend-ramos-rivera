@@ -1,9 +1,13 @@
 function jwtEstaExpirado(token) {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    // JWT usa Base64URL (- y _); atob requiere Base64 estándar (+ y /)
+    const base64url = token.split('.')[1];
+    const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(base64));
     return payload.exp != null && payload.exp * 1000 < Date.now();
   } catch {
-    return false;
+    // Si el token no se puede decodificar, asumirlo expirado para forzar re-login
+    return true;
   }
 }
 
